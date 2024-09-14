@@ -27,10 +27,52 @@ class Cube:
             self.image = red_block
         elif color == "yellow":
             self.image = yellow_block
-        self.x = x_position
-        self.y = y_position
+        self.x, self.y = x_position, y_position
         self.rect = self.image.get_rect(topleft = (self.x, self.y))
+
+    
+    def move(self):
+        self.y += 25
     
 
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
+
+
+class Tpiece:
+    def __init__(self) -> None:
+        self.leader_cube = Cube("purple", 375, 0)
+        self.position = 1
+        self.positions = {}
+
+
+    def move(self):
+        self.leader_cube.y += 25
+        self.positions = {
+        1: [Cube("purple", self.leader_cube.x, self.leader_cube.y - 25), 
+            Cube("purple", self.leader_cube.x + 25, self.leader_cube.y),
+            Cube("purple", self.leader_cube.x - 25, self.leader_cube.y)],
+
+        2: [Cube("purple", self.leader_cube.x, self.leader_cube.y - 25), 
+            Cube("purple", self.leader_cube.x, self.leader_cube.y + 25), 
+            Cube("purple", self.leader_cube.x + 25, self.leader_cube.y)],
+
+        3: [Cube("purple", self.leader_cube.x, self.leader_cube.y + 25), 
+            Cube("purple", self.leader_cube.x + 25, self.leader_cube.y), 
+            Cube("purple", self.leader_cube.x - 25, self.leader_cube.y)],
+
+        4: [Cube("purple", self.leader_cube.x, self.leader_cube.y - 25), 
+            Cube("purple", self.leader_cube.x, self.leader_cube.y + 25), 
+            Cube("purple", self.leader_cube.x - 25, self.leader_cube.y)]
+        }
+
+    
+    def draw(self, screen):
+        self.leader_cube.draw(screen)
+        for cube in self.position[self.position]:
+            cube.draw(screen)
+
+
+class Map:
+    def __init__(self) -> None:  
+        self.map = [[], [], [], [], [], [], [], [], [], []]
