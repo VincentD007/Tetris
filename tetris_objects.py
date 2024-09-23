@@ -51,7 +51,7 @@ class Tpiece:
             Cube("purple", self.reference_cube.rect.x - 25, self.reference_cube.rect.y)]
 
 
-    def move(self, direction):
+    def move(self, map, direction):
         if direction == "down":
             self.reference_cube.rect.y += 25
             for cube in self.follower_cubes:
@@ -59,23 +59,23 @@ class Tpiece:
         elif direction == "left":
             if self.position != 2:
                 if self.reference_cube.rect.x > 250:
-                    self.reference_cube.rect.x -= 25
+                    self.reference_cube.move("left")
                     for cube in self.follower_cubes:
                         cube.move("left")
             else:
                 if self.reference_cube.rect.x > 225:
-                    self.reference_cube.rect.x -= 25
+                    self.reference_cube.move("left")
                     for cube in self.follower_cubes:
                         cube.move("left")
         elif direction == "right":
             if self.position != 4:
                 if self.reference_cube.rect.x < 425:
-                    self.reference_cube.rect.x += 25
+                    self.reference_cube.move("right")
                     for cube in self.follower_cubes:
                         cube.move("right")
             else:
                 if self.reference_cube.rect.x < 450:
-                    self.reference_cube.rect.x += 25
+                    self.reference_cube.move("right")
                     for cube in self.follower_cubes:
                         cube.move("right")
  
@@ -105,25 +105,38 @@ class Tpiece:
             Cube("purple", self.reference_cube.rect.x - 25, self.reference_cube.rect.y)]
         }
 
-
-        if self.position != 4:
-            for cube in positions[self.position + 1]:
-                for mapcube in map[cube.rect.y // 25]:
-                    if mapcube.rect.x == cube.rect.x:
-                        return
-            self.position += 1
+        if self.reference_cube.rect.x != 225 and self.reference_cube.rect.x != 450:
+            if self.position == 4:
+                for cube in positions[1]:
+                    for mapcube in map[cube.rect.y // 25]:
+                        if mapcube.rect.x == cube.rect.x:
+                            return
+                self.position = 1
+            else:
+                for cube in positions[self.position + 1]:
+                    for mapcube in map[cube.rect.y // 25]:
+                        if mapcube.rect.x == cube.rect.x:
+                            return
+                self.position += 1
         else:
-            for cube in positions[1]:
-                for mapcube in map[cube.rect.y // 25]:
-                    if mapcube.rect.x == cube.rect.x:
-                        return
-            self.position = 1
-        
-        if self.reference_cube.rect.x == 225:
-            self.reference_cube.move("right")
-        elif self.reference_cube.rect.x == 450:
-            self.reference_cube.move("left")
- 
+            if self.reference_cube.rect.x == 225:
+                for cube in positions[3]:
+                    for mapcube in map[cube.rect.y // 25]:
+                        if cube.rect.x + 25 == mapcube.rect.x:
+                            return
+                self.position = 3
+                self.reference_cube.move("right")
+                for cube in positions[3]:
+                    cube.move("right")
+            else:
+                for cube in positions[1]:
+                    for mapcube in map[cube.rect.y // 25]:
+                        if cube.rect.x - 25 == mapcube.rect.x:
+                            return
+                self.position = 1
+                self.reference_cube.move("left")
+                for cube in positions[1]:
+                    cube.move("left")
         self.follower_cubes.clear()
         for cube in positions[self.position]:
             self.follower_cubes.append(cube)

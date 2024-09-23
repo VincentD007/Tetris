@@ -55,16 +55,16 @@ def main():
                 if event.key == pg.K_SPACE:
                     piece.rotate(map)
                 elif event.key == pg.K_LEFT:
-                    piece.move("left")
+                    piece.move(map, "left")
                 elif event.key == pg.K_RIGHT:
-                    piece.move("right")
+                    piece.move(map, "right")
         SCREEN.fill((50, 50, 50))
 
         draw_grid(SCREEN)
         map.drawcubes(SCREEN)
         if piece_move:
             if not check_collisioin(piece, map):
-                piece.move("down")
+                piece.move(map, "down")
             else:
                 piece = Tpiece()
             piece_move = False
@@ -75,4 +75,4 @@ def main():
     pg.quit()
 
 if __name__ == "__main__":
-    main()
+    main() 
