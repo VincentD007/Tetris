@@ -67,7 +67,7 @@ def main():
                 piece.move(map, "down")
             else:
                 piece = Tpiece()
-            piece_move = False
+            piece_move = False 
             pg.time.set_timer(PIECE_MOVE, 500)
         piece.draw(SCREEN)
 
