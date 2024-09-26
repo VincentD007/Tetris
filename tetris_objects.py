@@ -115,30 +115,64 @@ class Tpiece:
             Cube("purple", self.reference_cube.x - 25, self.reference_cube.y)]
         }
 
-        offset = 0
+
+        collision = False
+        collided_x = 0
         for cube in positions[next_position]:
-            if cube.rect.x  < 225:
-                if offset < 225 - cube.rect.x:
-                    offset = 225 - cube.rect.x
+            if cube.rect.y > 475:
+                return
+            collided_cube = pg.Rect.collidelist(cube.rect, [cube.rect for cube in map[cube.rect.y // 25]])
+            if collided_cube != -1:
+                collision = True
+                collided_x = cube.rect.x
+                break
+            elif cube.rect.x < 225:
+                collided_x = 200
+                collision = True
+                break
             elif cube.rect.x > 450:
-                if offset > 450 - cube.rect.x:
-                    offset = 450 - cube.rect.x
+                collided_x = 475
+                collision = True
+                break
+      
+        if collision:
+            offset = 0
+            cubestoleft = []
+            cubestoright = []
+            for cube in positions[next_position]:
+                if cube.rect.x > collided_x:
+                    cubestoright.append(cube)
+                elif cube.rect.x < collided_x:
+                    cubestoleft.append(cube)
+            l = len(cubestoleft)
+            r = len(cubestoright)
+            print(l)
+            print(r)
+            if l > r:
+                offset = -25
+                for cube in positions[next_position]:
+                    cube.rect.x += offset
+                    if pg.Rect.collidelist(cube.rect, [cube.rect for cube in map[cube.rect.y // 25]]) != -1:
+                        return
+                    elif cube.rect.x < 225:
+                        return
+                self.reference_cube.x += offset
+            elif r > l:
+                offset = 25
+                for cube in positions[next_position]:
+                    cube.rect.x += offset
+                    if pg.Rect.collidelist(cube.rect, [cube.rect for cube in map[cube.rect.y // 25]]) != -1:
+                        return
+                    elif cube.rect.x > 450:
+                        return
+                self.reference_cube.x += offset
 
-        for cube in positions[next_position]:
-            cube.rect.x += offset
-        self.reference_cube.x += offset
-
-        for cube in positions[next_position]:
-            for mapped_cube in map[cube.rect.y // 25]:
-                if mapped_cube.rect.x == cube.rect.x:
-                    return
-       
         self.position = next_position
         self.cubes.clear()
         for cube in positions[next_position]:
             self.cubes.append(cube)
 
-
+    # Returns a list of cubes that make up the piece
     def get_cubes(self):
         aggregated_cubes = [cube for cube in self.cubes]
         return aggregated_cubes

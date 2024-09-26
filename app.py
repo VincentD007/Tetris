@@ -27,7 +27,7 @@ def draw_grid(screen):
         spacing += 25
 
 
-def check_collisioin(piece, map):
+def map_collisioin(piece, map):
     for cube in piece.get_cubes():
         if cube.rect.y + 25 > 475:
             map.add(piece)
@@ -45,14 +45,13 @@ def main():
 
     piece = Tpiece()
     while playgame:
-        CLOCK.tick(60)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 playgame = False
             elif event == PIECE_MOVE:
                 piece_move = True
             if event.type == pg.KEYDOWN:
-                if event.key == pg.K_SPACE:
+                if event.key == pg.K_SPACE: 
                     piece.rotate(map)
                 elif event.key == pg.K_LEFT:
                     piece.move(map, "left")
@@ -63,12 +62,12 @@ def main():
         draw_grid(SCREEN)
         map.drawcubes(SCREEN)
         if piece_move:
-            if not check_collisioin(piece, map):
+            if not map_collisioin(piece, map):
                 piece.move(map, "down")
             else:
                 piece = Tpiece()
             piece_move = False 
-            pg.time.set_timer(PIECE_MOVE, 500)
+            pg.time.set_timer(PIECE_MOVE, 200)
         piece.draw(SCREEN)
 
         pg.display.update()
