@@ -1,5 +1,6 @@
 import pygame as pg
 from tetris_objects import *
+import random
 pg.init()
 
 WIDTH = 700
@@ -31,7 +32,7 @@ def map_collisioin(piece, map):
     for cube in piece.get_cubes():
         if cube.rect.y + 25 > 475:
             map.add(piece)
-            return True  
+            return True 
         for map_cube in map[(cube.rect.y // 25) + 1]:
             if cube.rect.y + 25 == map_cube.rect.y and cube.rect.x == map_cube.rect.x:
                 map.add(piece)
@@ -41,9 +42,9 @@ def map_collisioin(piece, map):
 def main():
     piece_move = True
     playgame = True
-    map = Map()
+    map = Map() 
 
-    piece = Tpiece()
+    piece = Ipiece()
     while playgame:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -65,11 +66,10 @@ def main():
             if not map_collisioin(piece, map):
                 piece.move(map, "down")
             else:
-                piece = Tpiece()
+                piece = Ipiece()
             piece_move = False 
-            pg.time.set_timer(PIECE_MOVE, 200)
+            pg.time.set_timer(PIECE_MOVE, 250)
         piece.draw(SCREEN)
-
         pg.display.update()
     pg.quit()
 
