@@ -282,10 +282,6 @@ class Ipiece:
                 if pg.Rect.colliderect(cube.rect, mapped_cube.rect):
                     cube_collision = True
                     map_cubes_collided.append(mapped_cube)
-            
-        print(cube_collision)
-        print(boarder_collision)
-
         cubes_to_left = []
         cubes_to_right = []
         if cube_collision and boarder_collision:
