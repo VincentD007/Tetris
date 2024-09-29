@@ -28,23 +28,23 @@ def draw_grid(screen):
         spacing += 25
 
 
-def map_collisioin(piece, map):
+def map_collisioin(piece, game_map):
     for cube in piece.get_cubes():
         if cube.rect.y + 25 > 475:
-            map.add(piece)
+            game_map.add(piece)
             return True 
-        for map_cube in map[(cube.rect.y // 25) + 1]:
+        for map_cube in game_map[(cube.rect.y // 25) + 1]:
             if cube.rect.y + 25 == map_cube.rect.y and cube.rect.x == map_cube.rect.x:
-                map.add(piece)
+                game_map.add(piece)
                 return True
 
 
 def main():
     piece_move = True
     playgame = True
-    map = Map() 
+    tetrismap = TetrisMap() 
 
-    piece = Ipiece()
+    piece = random.choice([Tpiece(), Ipiece(), Jpiece()])
     while playgame:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -53,22 +53,22 @@ def main():
                 piece_move = True
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE: 
-                    piece.rotate(map)
+                    piece.rotate(tetrismap)
                 elif event.key == pg.K_LEFT:
-                    piece.move(map, "left")
+                    piece.move(tetrismap, "left")
                 elif event.key == pg.K_RIGHT:
-                    piece.move(map, "right")
+                    piece.move(tetrismap, "right")
         SCREEN.fill((50, 50, 50))
 
         draw_grid(SCREEN)
-        map.drawcubes(SCREEN)
+        tetrismap.drawcubes(SCREEN)
         if piece_move:
-            if not map_collisioin(piece, map):
-                piece.move(map, "down")
+            if not map_collisioin(piece, tetrismap):
+                piece.move(tetrismap, "down")
             else:
-                piece = Ipiece()
+                piece = random.choice([Tpiece(), Ipiece(), Jpiece()])  
             piece_move = False 
-            pg.time.set_timer(PIECE_MOVE, 250)
+            pg.time.set_timer(PIECE_MOVE, 150)
         piece.draw(SCREEN)
         pg.display.update()
     pg.quit()

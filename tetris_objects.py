@@ -10,7 +10,7 @@ red_block = pg.transform.scale(pg.image.load("red_block.png"), (25, 25))
 yellow_block = pg.transform.scale(pg.image.load("yellow_block.png"), (25, 25))
 
 
-class Map:
+class TetrisMap:
     def __init__(self):  
         self.rows = [[] for _ in range(20)]
 
@@ -59,6 +59,36 @@ class Cube:
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
+
+def check_piece_collision(cubes, active_map):
+    for cube in cubes:
+        if cube.rect.y > 475:
+            return "Too far down"
+        if pg.Rect.collidelist(cube.rect, [mapcube.rect for mapcube in active_map[cube.rect.y // 25]]) != -1:
+            return True
+        elif cube.rect.x < 225 or cube.rect.x > 450:
+            return True
+    return False
+
+
+def bump_piece(piece_cubes, game_map):
+    bump_offset = 25
+    while True:
+        for cube in piece_cubes:
+            cube.rect.x += bump_offset
+        if not check_piece_collision(piece_cubes, game_map):
+            return True
+        else:
+            if bump_offset == 25:
+                bump_offset -= 75
+            elif bump_offset == -50:
+                bump_offset += 125
+            elif bump_offset == 75:
+                bump_offset -= 175
+            else:
+                break
+    return False
+                
 
 class Tpiece:
     def __init__(self):
@@ -186,9 +216,8 @@ class Tpiece:
 
         self.position = next_position
         self.cubes.clear()
-        for cube in positions[next_position]:
-            self.cubes.append(cube)
-
+        self.cubes.extend(positions[next_position])
+ 
     # Returns a list of cubes that make up the piece
     def get_cubes(self):
         aggregated_cubes = [cube for cube in self.cubes]
@@ -352,7 +381,89 @@ class Ipiece:
             self.reference_cube.x += offset
 
         self.cubes.clear()
-        for cube in positions[next_position]:
-            self.cubes.append(cube)
+        self.cubes.extend(positions[next_position])
         self.position = next_position
 
+
+class Jpiece:
+    def __init__(self):
+        self.reference_cube = pg.rect.Rect(350, 0, 25, 25)
+        starting_x, starting_y = 350, 0
+        self.position = 1
+        self.cubes = [
+            Cube("blue", starting_x - 25 , starting_y - 25),
+            Cube("blue", starting_x - 25, starting_y), 
+            Cube("blue", starting_x, starting_y),
+            Cube("blue", starting_x + 25, starting_y)]
+
+
+    def move(self, game_map, direction):
+        cubes_copy = [Cube("blue", cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
+        if direction == "down":
+            for cube in cubes_copy:
+                cube.move("down")
+        elif direction == "left":
+            for cube in cubes_copy:
+                cube.move("left")
+            if check_piece_collision(cubes_copy, game_map):
+                return
+        elif direction == "right":
+            for cube in cubes_copy:
+                cube.move("right")
+            if check_piece_collision(cubes_copy, game_map):
+                return
+        self.cubes.clear()
+        self.cubes.extend(cubes_copy)
+
+
+    def draw(self, screen):
+        for cube in self.cubes:
+            cube.draw(screen)
+
+
+    def get_cubes(self):
+        return self.cubes
+
+    
+    def rotate(self, game_map):
+        cubes_copy = [Cube("blue", cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
+        if self.position == 4:
+            next_position = 1
+        else:
+            next_position = self.position + 1
+        
+        if next_position == 2:
+            cubes_copy[0].rect.x += 50
+            cubes_copy[1].rect.y -= 25
+            cubes_copy[1].rect.x += 25
+            cubes_copy[3].rect.y += 25
+            cubes_copy[3].rect.x -= 25
+        elif next_position == 3:
+            cubes_copy[0].rect.y += 50
+            cubes_copy[1].rect.x += 25
+            cubes_copy[1].rect.y += 25
+            cubes_copy[3].rect.x -= 25
+            cubes_copy[3].rect.y -= 25
+        elif next_position == 4:
+            cubes_copy[0].rect.x -= 50 
+            cubes_copy[1].rect.x -= 25
+            cubes_copy[1].rect.y += 25
+            cubes_copy[3].rect.x += 25
+            cubes_copy[3].rect.y -= 25
+        elif next_position == 1:
+            cubes_copy[0].rect.y -= 50
+            cubes_copy[1].rect.x -= 25
+            cubes_copy[1].rect.y -= 25
+            cubes_copy[3].rect.x += 25
+            cubes_copy[3].rect.y += 25
+
+        collided = check_piece_collision(cubes_copy, game_map)
+        if collided:
+            if not bump_piece(cubes_copy, game_map):
+                return
+        elif collided == "Too far down":
+            return
+        
+        self.position = next_position
+        self.cubes.clear()
+        self.cubes.extend(cubes_copy)
