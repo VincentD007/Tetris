@@ -44,6 +44,9 @@ class Cube:
             self.image = red_block
         elif color == "yellow":
             self.image = yellow_block
+        else:
+            raise ValueError
+            
         self.rect = self.image.get_rect(topleft = (x_position, y_position))
 
  
@@ -88,22 +91,19 @@ def bump_piece(piece_cubes, game_map):
             else:
                 break
     return False
-                
 
-class Tpiece:
-    def __init__(self):
-        self.reference_cube = pg.rect.Rect(350, 0, 25, 25)
-        starting_x, starting_y = 350, 0
+
+# Base Class for all tetriminoes
+class Piece:
+    def __init__(self, cube_color):
         self.position = 1
-        self.cubes = [
-            Cube("purple", starting_x - 25 , starting_y),
-            Cube("purple", starting_x, starting_y - 25), 
-            Cube("purple", starting_x + 25, starting_y),
-            Cube("purple", starting_x, starting_y)]
+        self.starting_coords = (350, -25)
+        self.color = cube_color.lower()
+        self.cubes = []
 
 
     def move(self, game_map, direction):
-        cubes_copy = [Cube("purple", cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
+        cubes_copy = [Cube(self.color, cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
         if direction == "down":
             for cube in cubes_copy:
                 cube.move("down")
@@ -125,14 +125,29 @@ class Tpiece:
         for cube in self.cubes:
             cube.draw(screen)
 
+    
+    def get_cubes(self):
+        aggregated_cubes = [cube for cube in self.cubes]
+        return aggregated_cubes
+
+
+    
+class Tpiece(Piece):
+    def __init__(self, color):
+        super().__init__(color)
+        self.cubes = [
+            Cube(self.color, self.starting_coords[0] - 25 , self.starting_coords[1]),
+            Cube(self.color, self.starting_coords[0], self.starting_coords[1] - 25), 
+            Cube(self.color, self.starting_coords[0] + 25, self.starting_coords[1]),
+            Cube(self.color, self.starting_coords[0], self.starting_coords[1])]
+
 
     def rotate(self, game_map):
-        cubes_copy = [Cube("purple", cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
+        cubes_copy = [Cube(self.color, cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
         if self.position == 4:
             next_position = 1
         else:
             next_position = self.position + 1
-        # Adjust rotations to Tpiece
         if next_position == 2:
             cubes_copy[0].rect.x += 25
             cubes_copy[0].rect.y -= 25
@@ -174,54 +189,21 @@ class Tpiece:
         self.cubes.clear()
         self.cubes.extend(cubes_copy)
         self.position = next_position
-    
-    def get_cubes(self):
-        aggregated_cubes = [cube for cube in self.cubes]
-        return aggregated_cubes
 
 
-class Ipiece:
-    def __init__(self):
-        self.reference_cube = pg.rect.Rect(350, 0, 25, 25)
-        starting_x, starting_y = 350, 0
-        self.position = 1
+
+class Ipiece(Piece):
+    def __init__(self, color):
+        super().__init__(color)
         self.cubes = [
-            Cube("light_blue", starting_x - 25 , starting_y),
-            Cube("light_blue", starting_x, starting_y), 
-            Cube("light_blue", starting_x + 25, starting_y),
-            Cube("light_blue", starting_x + 50, starting_y)]
+            Cube(self.color, self.starting_coords[0] - 25 , self.starting_coords[1]),
+            Cube(self.color, self.starting_coords[0], self.starting_coords[1]), 
+            Cube(self.color, self.starting_coords[0] + 25, self.starting_coords[1]),
+            Cube(self.color, self.starting_coords[0] + 50, self.starting_coords[1])]
 
-
-    def move(self, game_map, direction):
-        cubes_copy = [Cube("light_blue", cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
-        if direction == "down":
-            for cube in cubes_copy:
-                cube.move("down")
-        elif direction == "left":
-            for cube in cubes_copy:
-                cube.move("left")
-            if check_piece_collision(cubes_copy, game_map):
-                return
-        elif direction == "right":
-            for cube in cubes_copy:
-                cube.move("right")
-            if check_piece_collision(cubes_copy, game_map):
-                return
-        self.cubes.clear()
-        self.cubes.extend(cubes_copy)
-
-
-    def draw(self, screen):
-        for cube in self.cubes:
-            cube.draw(screen)
-
-
-    def get_cubes(self):
-        return [cube for cube in self.cubes]
-    
 
     def rotate(self, game_map):
-        cubes_copy = [Cube("light_blue", cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
+        cubes_copy = [Cube(self.color, cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
         if self.position == 4:
             next_position = 1
         else:
@@ -267,48 +249,19 @@ class Ipiece:
         self.position = next_position
 
 
-class Jpiece:
-    def __init__(self):
-        self.reference_cube = pg.rect.Rect(350, 0, 25, 25)
-        starting_x, starting_y = 350, 0
-        self.position = 1
+
+class Jpiece(Piece):
+    def __init__(self, color):
+        super().__init__(color)
         self.cubes = [
-            Cube("blue", starting_x - 25 , starting_y - 25),
-            Cube("blue", starting_x - 25, starting_y), 
-            Cube("blue", starting_x, starting_y),
-            Cube("blue", starting_x + 25, starting_y)]
+            Cube(self.color, self.starting_coords[0] - 25 , self.starting_coords[1] - 25),
+            Cube(self.color, self.starting_coords[0] - 25, self.starting_coords[1]), 
+            Cube(self.color, self.starting_coords[0], self.starting_coords[1]),
+            Cube(self.color, self.starting_coords[0] + 25, self.starting_coords[1])]
 
-
-    def move(self, game_map, direction):
-        cubes_copy = [Cube("blue", cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
-        if direction == "down":
-            for cube in cubes_copy:
-                cube.move("down")
-        elif direction == "left":
-            for cube in cubes_copy:
-                cube.move("left")
-            if check_piece_collision(cubes_copy, game_map):
-                return
-        elif direction == "right":
-            for cube in cubes_copy:
-                cube.move("right")
-            if check_piece_collision(cubes_copy, game_map):
-                return
-        self.cubes.clear()
-        self.cubes.extend(cubes_copy)
-
-
-    def draw(self, screen):
-        for cube in self.cubes:
-            cube.draw(screen)
-
-
-    def get_cubes(self):
-        return self.cubes
-
-    
+  
     def rotate(self, game_map):
-        cubes_copy = [Cube("blue", cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
+        cubes_copy = [Cube(self.color, cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
         if self.position == 4:
             next_position = 1
         else:

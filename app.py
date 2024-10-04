@@ -44,7 +44,7 @@ def main():
     playgame = True
     tetrismap = TetrisMap() 
 
-    piece = random.choice([Tpiece(), Ipiece(), Jpiece()])
+    piece = random.choice([Tpiece("purple"), Ipiece("light_blue"), Jpiece("blue")])
     while playgame:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -58,7 +58,7 @@ def main():
                     piece.move(tetrismap, "left")
                 elif event.key == pg.K_RIGHT:
                     piece.move(tetrismap, "right")
-        SCREEN.fill((50, 50, 50))
+        SCREEN.fill((70, 70, 70))
 
         draw_grid(SCREEN)
         tetrismap.drawcubes(SCREEN)
@@ -66,7 +66,7 @@ def main():
             if not map_collisioin(piece, tetrismap):
                 piece.move(tetrismap, "down")
             else:
-                piece = random.choice([Tpiece(), Ipiece(), Jpiece()])  
+                piece = random.choice([Tpiece("purple"), Ipiece("light_blue"), Jpiece("blue")])
             piece_move = False 
             pg.time.set_timer(PIECE_MOVE, 150)
         piece.draw(SCREEN)
