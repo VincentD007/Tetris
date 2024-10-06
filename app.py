@@ -28,19 +28,8 @@ def draw_grid(screen):
         spacing += 25
 
 
-def map_collisioin(piece, game_map):
-    for cube in piece.get_cubes():
-        if cube.rect.y + 25 > 475:
-            game_map.add(piece)
-            return True 
-        for map_cube in game_map[(cube.rect.y // 25) + 1]:
-            if cube.rect.y + 25 == map_cube.rect.y and cube.rect.x == map_cube.rect.x:
-                game_map.add(piece)
-                return True
-
-
 def main():
-    piece_move = True
+    piece_move_down = True
     playgame = True
     tetrismap = TetrisMap() 
 
@@ -50,7 +39,7 @@ def main():
             if event.type == pg.QUIT:
                 playgame = False
             elif event == PIECE_MOVE:
-                piece_move = True
+                piece_move_down = True
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE: 
                     piece.rotate(tetrismap)
@@ -62,13 +51,18 @@ def main():
 
         draw_grid(SCREEN)
         tetrismap.drawcubes(SCREEN)
-        if piece_move:
-            if not map_collisioin(piece, tetrismap):
-                piece.move(tetrismap, "down")
-            else:
+        if piece_move_down:
+            piece_move_down = False 
+            moved = piece.move(tetrismap, "down")
+            if not moved:
+                tetrismap.add(piece)
+                for cube in piece.get_cubes():
+                    if cube.rect.y < 0:
+                        playgame = False
+                tetrismap.check_complete_rows()
                 piece = random.choice([Tpiece("purple"), Ipiece("light_blue"), Jpiece("blue")])
-            piece_move = False 
-            pg.time.set_timer(PIECE_MOVE, 150)
+            pg.time.set_timer(PIECE_MOVE, 120)
+
         piece.draw(SCREEN)
         pg.display.update()
     pg.quit()

@@ -1,28 +1,44 @@
 import pygame as pg
 pg.init()
 
-purple_block = pg.transform.scale(pg.image.load("purple_block.png"), (25, 25))
-blue_block = pg.transform.scale(pg.image.load("blue_block.png"), (25, 25))
-gold_block = pg.transform.scale(pg.image.load("gold_block.png"), (25, 25))
-green_block = pg.transform.scale(pg.image.load("green_block.png"), (25, 25))
-light_blue_block = pg.transform.scale(pg.image.load("light_blue_block.png"), (25, 25))
-red_block = pg.transform.scale(pg.image.load("red_block.png"), (25, 25))
-yellow_block = pg.transform.scale(pg.image.load("yellow_block.png"), (25, 25))
+purple_block = pg.transform.scale(pg.image.load("assets/purple_block.png"), (25, 25))
+blue_block = pg.transform.scale(pg.image.load("assets/blue_block.png"), (25, 25))
+gold_block = pg.transform.scale(pg.image.load("assets/gold_block.png"), (25, 25))
+green_block = pg.transform.scale(pg.image.load("assets/green_block.png"), (25, 25))
+light_blue_block = pg.transform.scale(pg.image.load("assets/light_blue_block.png"), (25, 25))
+red_block = pg.transform.scale(pg.image.load("assets/red_block.png"), (25, 25))
+yellow_block = pg.transform.scale(pg.image.load("assets/yellow_block.png"), (25, 25))
 
 
 class TetrisMap:
     def __init__(self):  
         self.rows = [[] for _ in range(20)]
 
+
     def add(self, tetris_piece):
         for cube in tetris_piece.get_cubes():
-            location = cube.rect.y // 25
-            self.rows[location].append(cube)
+            row = cube.rect.y // 25
+            self.rows[row].append(cube)
+
 
     def drawcubes(self, screen):
         for row in self.rows:
             for cube in row:
                 cube.draw(screen)
+
+
+    def check_complete_rows(self):
+        complete_row_count = 0
+        for row in self.rows:
+            if len(row) >= 10:
+                deleted_index = self.rows.index(row)
+                del self.rows[deleted_index]
+                for index in range(0, deleted_index):
+                    for cube in self.rows[index]:
+                        cube.move("down")
+                self.rows.insert(0, [])
+                complete_row_count += 1
+                
 
     def __getitem__(self, i):
         return self.rows[i]
@@ -107,18 +123,21 @@ class Piece:
         if direction == "down":
             for cube in cubes_copy:
                 cube.move("down")
+            if check_piece_collision(cubes_copy, game_map):
+                return False
         elif direction == "left":
             for cube in cubes_copy:
                 cube.move("left")
             if check_piece_collision(cubes_copy, game_map):
-                return
+                return False
         elif direction == "right":
             for cube in cubes_copy:
                 cube.move("right")
             if check_piece_collision(cubes_copy, game_map):
-                return
+                return False
         self.cubes.clear()
         self.cubes.extend(cubes_copy)
+        return True
  
 
     def draw(self, screen):
@@ -127,8 +146,7 @@ class Piece:
 
     
     def get_cubes(self):
-        aggregated_cubes = [cube for cube in self.cubes]
-        return aggregated_cubes
+        return [cube for cube in self.cubes]
 
 
     
