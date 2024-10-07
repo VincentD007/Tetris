@@ -29,7 +29,6 @@ def draw_grid(screen):
 
 
 def main():
-    game_win = False
     game_loose = False
     piece_move_down = True
     playgame = True
@@ -41,7 +40,7 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 playgame = False
-            elif not game_win and not game_loose:
+            elif not game_loose:
                 if event == PIECE_MOVE:
                     piece_move_down = True
                 if event.type == pg.KEYDOWN:
@@ -51,30 +50,31 @@ def main():
                         piece.move(tetrismap, "left")
                     elif event.key == pg.K_RIGHT:
                         piece.move(tetrismap, "right")
+
         SCREEN.fill((70, 70, 70))
         draw_grid(SCREEN)
         tetrismap.drawcubes(SCREEN)
-        if not game_win and not game_loose:
-            if piece_move_down:
-                piece_move_down = False 
-                moved = piece.move(tetrismap, "down")
-                if not moved:
-                    tetrismap.add(piece)
-                    for cube in piece.get_cubes():
-                        if cube.rect.y < 0:
-                            game_loose = True
-                            break
-                    complete_rows = tetrismap.complete_rows()
-                    for row in complete_rows:
-                        del tetrismap.rows[row]
-                        tetrismap.rows.insert(0, [])
+
+        if piece_move_down:
+            piece_move_down = False 
+            moved = piece.move(tetrismap, "down")
+            if not moved:
+                tetrismap.add(piece)
+                if len(tetrismap.out_of_bounds) > 0:
+                    game_loose = True
+                else:
                     piece = random.choice([Tpiece("purple"), Ipiece("light_blue"), Jpiece("blue")])
+            if not game_loose:
                 pg.time.set_timer(PIECE_MOVE, 120)
 
-            for row_index in range(0, 20):
-                for cube in tetrismap[row_index]:
-                    if cube.rect.y // 25 != row_index:
-                        cube.rect.y += 1
+        complete_rows = tetrismap.complete_rows()
+        for row in complete_rows:
+            del tetrismap.rows[row]
+            tetrismap.rows.insert(0, [])
+        for row_index in range(0, 20):
+            for cube in tetrismap[row_index]:
+                if cube.rect.y // 25 != row_index:
+                    cube.rect.y += 1
 
         piece.draw(SCREEN)
         pg.display.update()

@@ -13,12 +13,16 @@ yellow_block = pg.transform.scale(pg.image.load("assets/yellow_block.png"), (25,
 class TetrisMap:
     def __init__(self):  
         self.rows = [[] for _ in range(20)]
+        self.out_of_bounds = []
 
 
     def add(self, tetris_piece):
         for cube in tetris_piece.get_cubes():
-            row = cube.rect.y // 25
-            self.rows[row].append(cube)
+            if cube.rect.y < 0:
+                self.out_of_bounds.append(cube)
+            else:
+                row = cube.rect.y // 25
+                self.rows[row].append(cube)
 
 
     def drawcubes(self, screen):
@@ -38,7 +42,7 @@ class TetrisMap:
     def __getitem__(self, i):
         return self.rows[i]
     
-    
+
 
 class Cube:
     def __init__(self, color, x_position, y_position):
