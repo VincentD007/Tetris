@@ -27,21 +27,17 @@ class TetrisMap:
                 cube.draw(screen)
 
 
-    def check_complete_rows(self):
-        complete_row_count = 0
+    def complete_rows(self):
+        complete_rows = []
         for row in self.rows:
             if len(row) >= 10:
-                deleted_index = self.rows.index(row)
-                del self.rows[deleted_index]
-                for index in range(0, deleted_index):
-                    for cube in self.rows[index]:
-                        cube.move("down")
-                self.rows.insert(0, [])
-                complete_row_count += 1
+                complete_rows.append(self.rows.index(row))
+        return complete_rows
                 
 
     def __getitem__(self, i):
         return self.rows[i]
+    
     
 
 class Cube:

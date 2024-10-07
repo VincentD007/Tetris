@@ -35,6 +35,7 @@ def main():
 
     piece = random.choice([Tpiece("purple"), Ipiece("light_blue"), Jpiece("blue")])
     while playgame:
+        CLOCK.tick(60)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 playgame = False
@@ -59,9 +60,18 @@ def main():
                 for cube in piece.get_cubes():
                     if cube.rect.y < 0:
                         playgame = False
-                tetrismap.check_complete_rows()
+                        break
+                complete_rows = tetrismap.complete_rows()
+                for row in complete_rows:
+                    del tetrismap.rows[row]
+                    tetrismap.rows.insert(0, [])
                 piece = random.choice([Tpiece("purple"), Ipiece("light_blue"), Jpiece("blue")])
             pg.time.set_timer(PIECE_MOVE, 120)
+
+        for row_index in range(0, 20):
+            for cube in tetrismap[row_index]:
+                if cube.rect.y // 25 != row_index:
+                    cube.rect.y += 1
 
         piece.draw(SCREEN)
         pg.display.update()
