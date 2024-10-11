@@ -10,7 +10,6 @@ CLOCK = pg.time.Clock()
 PIECE_MOVEDOWN = pg.event.Event(pg.USEREVENT + 1)
 DEL_COLUMN = pg.event.Event(pg.USEREVENT + 2)
 
-
 class TetrisMap:
     def __init__(self, screen):  
         self.rows = [[] for _ in range(20)]
@@ -27,7 +26,6 @@ class TetrisMap:
                 self.rows[row].append(cube)
         for unsorted_row in self.rows:
             unsorted_row.sort(key=lambda cube: cube.rect.x)
-            print([xvalue.rect.x for xvalue in unsorted_row])
 
 
     def draw(self):
@@ -63,23 +61,24 @@ class TetrisMap:
 
     def delete_completed_rows(self):
         score = 0
-        if len(self.completed_rows) == 0:
+        completed_rows = self.completed_rows
+        if len(completed_rows) == 0:
             return score
         pg.event.post(DEL_COLUMN)
-        len_rows = 0
-        while len_rows >= 0: 
-            break
+        len_rows = 10
+        while len_rows > 0: 
             for event in pg.event.get():
                 if event == DEL_COLUMN:
-                    for row in self.completed_rows:
-                        del_index = (len(self.rows[row]) // 2) - 1
+                    for row in completed_rows:
+                        del_index = len_rows // 2 - 1
                         del self.rows[row][del_index]
                         del self.rows[row][del_index]
-                        len_rows = len(self.rows[row])
-                    pg.time.set_timer(DEL_COLUMN, 300)
+                    len_rows -= 2
+                    pg.time.set_timer(DEL_COLUMN, 80)
             self.screen.fill((70, 70, 70))
             self.draw()
-        for row in self.completed_rows:
+            pg.display.update()
+        for row in completed_rows:
             del self.rows[row]
             self.rows.insert(0, [])
             score += 2000
