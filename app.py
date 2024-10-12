@@ -93,7 +93,9 @@ def main():
     playgame = True
     tetrismap = TetrisMap(SCREEN)
 
-    piece = random.choice([Tpiece("purple"), Ipiece("light_blue"), Jpiece("blue")])
+    piece = random.choice([Tpiece("purple", tetrismap), Ipiece("light_blue", tetrismap), Jpiece("blue", tetrismap), 
+                           Lpiece("orange", tetrismap), Opiece("yellow", tetrismap), Spiece("green", tetrismap), Zpiece("red", tetrismap)
+                           ])
     pg.time.set_timer(PIECE_MOVEDOWN, 120)
     while playgame:
         CLOCK.tick(60)
@@ -107,7 +109,14 @@ def main():
 
         if not game_loose:
             for event in events:
-                if event == PIECE_MOVEDOWN:
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_SPACE: 
+                        piece.rotate()
+                    elif event.key == pg.K_LEFT:
+                        piece.move(tetrismap, "left")
+                    elif event.key == pg.K_RIGHT:
+                        piece.move(tetrismap, "right")
+                elif event == PIECE_MOVEDOWN:
                     has_moved = piece.move(tetrismap, "down")
                     if has_moved:
                         pg.time.set_timer(PIECE_MOVEDOWN, 120)
@@ -116,15 +125,9 @@ def main():
                     else:
                         tetrismap.add(piece)
                         player_score += tetrismap.delete_completed_rows()
-                        piece = random.choice([Tpiece("purple"), Ipiece("light_blue"), Jpiece("blue")])
-                elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_SPACE: 
-                        piece.rotate(tetrismap)
-                    elif event.key == pg.K_LEFT:
-                        piece.move(tetrismap, "left")
-                    elif event.key == pg.K_RIGHT:
-                        piece.move(tetrismap, "right")
-
+                        piece = random.choice([Tpiece("purple", tetrismap), Ipiece("light_blue", tetrismap), Jpiece("blue", tetrismap), 
+                                               Lpiece("orange", tetrismap), Opiece("yellow", tetrismap), Spiece("green", tetrismap), Zpiece("red", tetrismap)
+                                               ])
         for row_index in range(0, 20):
             for cube in tetrismap[row_index]:
                 if cube.rect.y // 25 != row_index:
