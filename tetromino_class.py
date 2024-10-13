@@ -9,6 +9,7 @@ green_block = pg.transform.scale(pg.image.load("assets/green_block.png"), (25, 2
 light_blue_block = pg.transform.scale(pg.image.load("assets/light_blue_block.png"), (25, 25))
 red_block = pg.transform.scale(pg.image.load("assets/red_block.png"), (25, 25))
 yellow_block = pg.transform.scale(pg.image.load("assets/yellow_block.png"), (25, 25))
+black_block = pg.transform.scale(pg.image.load("assets/black_block.png"), (25, 25))
 
 
 class Cube:
@@ -27,6 +28,8 @@ class Cube:
             self.image = red_block
         elif color == "yellow":
             self.image = yellow_block
+        elif color == "black":
+            self.image = black_block
         else:
             raise ValueError
             
@@ -108,6 +111,13 @@ class Piece:
  
 
     def draw(self, screen):
+        shadow_cubes = [Cube("black", cube.rect.x, cube.rect.y) for cube in self.cubes]
+        while not check_piece_collision(shadow_cubes, self.map):
+            for cube in shadow_cubes:
+                cube.move("down")
+        for cube in shadow_cubes:
+            cube.rect.y -= 25
+            cube.draw(screen)
         for cube in self.cubes:
             cube.draw(screen)
 
@@ -181,10 +191,10 @@ class Ipiece(Piece):
     def __init__(self, color, map):
         super().__init__(color, map)
         self.cubes = [
-            Cube(self.color, self.starting_coords[0] - 25 , self.starting_coords[1]),
-            Cube(self.color, self.starting_coords[0], self.starting_coords[1]), 
-            Cube(self.color, self.starting_coords[0] + 25, self.starting_coords[1]),
-            Cube(self.color, self.starting_coords[0] + 50, self.starting_coords[1])]
+            Cube(self.color, self.starting_coords[0] - 50 , self.starting_coords[1]),
+            Cube(self.color, self.starting_coords[0] - 25, self.starting_coords[1]), 
+            Cube(self.color, self.starting_coords[0], self.starting_coords[1]),
+            Cube(self.color, self.starting_coords[0] + 25, self.starting_coords[1])]
 
 
     def rotate(self):
@@ -463,3 +473,4 @@ class Zpiece(Piece):
         self.position = next_position
         self.cubes.clear()
         self.cubes.extend(cubes_copy)
+ 
