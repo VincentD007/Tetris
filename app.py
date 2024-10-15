@@ -10,6 +10,13 @@ CLOCK = pg.time.Clock()
 PIECE_MOVEDOWN = pg.event.Event(pg.USEREVENT + 1)
 DEL_COLUMN = pg.event.Event(pg.USEREVENT + 2)
 STOP_ADDPIECE_DELAY = pg.event.Event(pg.USEREVENT + 3)
+STOP_MOVEMENTDELAY = pg.event.Event(pg.USEREVENT + 4)
+STOP_ROTATIONDELAY = pg.event.Event(pg.USEREVENT + 5)
+
+
+def display_score(screen, score):
+    pass
+
 
 class TetrisMap:
     def __init__(self, screen):  
@@ -75,7 +82,7 @@ class TetrisMap:
                         del self.rows[row][del_index]
                         del self.rows[row][del_index]
                     len_rows -= 2
-                    pg.time.set_timer(DEL_COLUMN, 30)
+                    pg.time.set_timer(DEL_COLUMN, 60, 9)
             self.screen.fill((100, 100, 100))
             self.draw()
             pg.display.update()
@@ -83,6 +90,21 @@ class TetrisMap:
             del self.rows[row]
             self.rows.insert(0, [])
             score += 2000
+
+        rows_falling = True
+        while rows_falling:
+            CLOCK.tick(100)
+            unsettled_cubes = 0
+            for row_index in range(0, 20):
+                for cube in self[row_index]:
+                    if cube.rect.y // 25 != row_index:
+                        cube.rect.y += 1
+                        unsettled_cubes += 1
+            if unsettled_cubes == 0:
+                rows_falling = False
+            self.screen.fill((100, 100, 100))
+            self.draw()
+            pg.display.update()
         return score
     
 
@@ -90,77 +112,102 @@ class TetrisMap:
         return self.rows[i]
 
 
+
 def main():
+    tetrismap = TetrisMap(SCREEN)
     player_score = 0
     game_loose = False
     pause_game = False
-    addpiece_delay = True
+    addpiece_delayed = True
+    movement_delayed = False
+    rotate_delayed = False
+    addpiece_delay_duration = 800
+    movement_delay_duration = 100
+    rotate_delay_duration = 120
     first_collision_happened = False
-    fall_speed = 350
     playgame = True
-    tetrismap = TetrisMap(SCREEN)
+    fall_delay = 200
 
-    piece = random.choice([Tpiece("purple", tetrismap), Ipiece("light_blue", tetrismap), Jpiece("blue", tetrismap), 
-                           Lpiece("orange", tetrismap), Opiece("yellow", tetrismap), Spiece("green", tetrismap), Zpiece("red", tetrismap)
-                           ])
-    pg.time.set_timer(PIECE_MOVEDOWN, fall_speed)
+    next_piece = random.choice([
+        Tpiece("purple", tetrismap), Ipiece("light_blue", tetrismap), 
+        Jpiece("blue", tetrismap), Lpiece("orange", tetrismap), 
+        Opiece("yellow", tetrismap), Spiece("green", tetrismap), Zpiece("red", tetrismap)
+        ])
+    piece = random.choice([
+        Tpiece("purple", tetrismap), Ipiece("light_blue", tetrismap), 
+        Jpiece("blue", tetrismap), Lpiece("orange", tetrismap), 
+        Opiece("yellow", tetrismap), Spiece("green", tetrismap), Zpiece("red", tetrismap)
+        ])
+    
+    pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
     while playgame:
         CLOCK.tick(60)
         events = pg.event.get()
+
         for event in events:
             if event.type == pg.QUIT:
                 playgame = False
-            elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    pause_game = not pause_game
+            elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                pause_game = not pause_game
 
         SCREEN.fill((100, 100, 100))
 
         if not game_loose and not pause_game:
+            if (pg.key.get_pressed()[pg.K_LEFT] or pg.key.get_pressed()[pg.K_RIGHT]) and not movement_delayed:
+                if pg.key.get_pressed()[pg.K_LEFT] and not pg.key.get_pressed()[pg.K_RIGHT]:
+                    piece.move("left")
+                    pg.time.set_timer(STOP_MOVEMENTDELAY, movement_delay_duration, 1)
+                    movement_delayed = True
+                elif pg.key.get_pressed()[pg.K_RIGHT] and not pg.key.get_pressed()[pg.K_LEFT]:
+                    piece.move("right")
+                    pg.time.set_timer(STOP_MOVEMENTDELAY, movement_delay_duration, 1)
+                    movement_delayed = True
+
+            if pg.key.get_pressed()[pg.K_SPACE] and not rotate_delayed:
+                piece.rotate()
+                rotate_delayed = True
+                pg.time.set_timer(STOP_ROTATIONDELAY, rotate_delay_duration, 1)
+
+
+            if pg.key.get_pressed()[pg.K_DOWN]:
+                pg.event.post(PIECE_MOVEDOWN)
+
             for event in events:
-                pressed_keys = pg.key.get_pressed()
-                if pressed_keys[pg.K_DOWN]:
-                    pg.event.post(PIECE_MOVEDOWN)
+                if event == STOP_ADDPIECE_DELAY:
+                    addpiece_delayed = False
 
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_SPACE: 
-                        piece.rotate()
-                    elif event.key == pg.K_LEFT:
-                        piece.move(tetrismap, "left")
-                    elif event.key == pg.K_RIGHT:
-                        piece.move(tetrismap, "right")
+                elif event == STOP_MOVEMENTDELAY:
+                    movement_delayed = False
 
-                elif event == STOP_ADDPIECE_DELAY:
-                    addpiece_delay = False
+                elif event == STOP_ROTATIONDELAY:
+                    rotate_delayed = False
 
                 elif event == PIECE_MOVEDOWN:
-                    moved_down = piece.move(tetrismap, "down")
-                    if not moved_down:
-                        if not first_collision_happened:
-                            first_collision_happened = True
-                            pg.time.set_timer(STOP_ADDPIECE_DELAY, 500, 1)
-                        if not addpiece_delay:
-                            tetrismap.add(piece)
-                            player_score += tetrismap.delete_completed_rows()
-                            if len(tetrismap.out_of_bounds) > 0:
-                                game_loose = True
-                            else:
-                                addpiece_delay = True
-                                first_collision_happened = False
-                                piece = random.choice([Tpiece("purple", tetrismap), Ipiece("light_blue", tetrismap), Jpiece("blue", tetrismap), 
-                                                    Lpiece("orange", tetrismap), Opiece("yellow", tetrismap), Spiece("green", tetrismap), Zpiece("red", tetrismap)
-                                                    ])
-                                pg.time.set_timer(PIECE_MOVEDOWN, fall_speed)
-
-
-
-        for row_index in range(0, 20):
-            for cube in tetrismap[row_index]:
-                if cube.rect.y // 25 != row_index:
-                    cube.rect.y += 5
-
+                    moved_down = piece.move("down")
+                    if moved_down:
+                        pg.time.set_timer(STOP_ADDPIECE_DELAY, 0)
+                        addpiece_delayed = True
+                        first_collision_happened = False
+                    elif not addpiece_delayed:
+                        pg.time.set_timer(PIECE_MOVEDOWN, 0)
+                        tetrismap.add(piece)
+                        player_score += tetrismap.delete_completed_rows()
+                        if len(tetrismap.out_of_bounds) > 0:
+                            game_loose = True
+                        else:
+                            piece = next_piece
+                            next_piece = random.choice([
+                            Tpiece("purple", tetrismap), Ipiece("light_blue", tetrismap), 
+                            Jpiece("blue", tetrismap), Lpiece("orange", tetrismap), 
+                            Opiece("yellow", tetrismap), Spiece("green", tetrismap), Zpiece("red", tetrismap)
+                            ])
+                            pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
+                    elif not moved_down and not first_collision_happened:
+                        pg.time.set_timer(STOP_ADDPIECE_DELAY, addpiece_delay_duration, 1)
+                        first_collision_happened = True
         piece.draw(SCREEN)
         tetrismap.draw()
+        display_score(SCREEN, player_score)
         pg.display.update()
     pg.quit()
 

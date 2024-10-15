@@ -88,22 +88,22 @@ class Piece:
         self.cubes = []
         self.map = game_map
 
-    def move(self, game_map, direction):
+    def move(self, direction):
         cubes_copy = [Cube(self.color, cpycube.rect.x, cpycube.rect.y) for cpycube in self.cubes]
         if direction == "down":
             for cube in cubes_copy:
                 cube.move("down")
-            if check_piece_collision(cubes_copy, game_map):
+            if check_piece_collision(cubes_copy, self.map):
                 return False
         elif direction == "left":
             for cube in cubes_copy:
                 cube.move("left")
-            if check_piece_collision(cubes_copy, game_map):
+            if check_piece_collision(cubes_copy, self.map):
                 return False
         elif direction == "right":
             for cube in cubes_copy:
                 cube.move("right")
-            if check_piece_collision(cubes_copy, game_map):
+            if check_piece_collision(cubes_copy, self.map):
                 return False
         self.cubes.clear()
         self.cubes.extend(cubes_copy)
