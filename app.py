@@ -34,7 +34,6 @@ class TetrisMap:
                 self.rows[row].append(cube)
         for unsorted_row in self.rows:
             unsorted_row.sort(key=lambda cube: cube.rect.x)
-            #print([cube.rect.x for cube in unsorted_row])
 
 
     def draw(self):
@@ -71,7 +70,6 @@ class TetrisMap:
     def delete_completed_rows(self):
         score = 0
         completed_rows = self.completed_rows
-        print(completed_rows)
         if len(completed_rows) == 0:
             return score
         pg.event.post(DEL_COLUMN)
@@ -194,6 +192,8 @@ def main():
                     elif not addpiece_delayed:
                         pg.time.set_timer(PIECE_MOVEDOWN, 0)
                         tetrismap.add(piece)
+                        movement_delayed = False
+                        rotate_delayed = False
                         player_score += tetrismap.delete_completed_rows()
                         if len(tetrismap.out_of_bounds) > 0:
                             game_loose = True
@@ -215,6 +215,7 @@ def main():
                                 if len(row) + piececubes_in_row == 10:
                                     addpiece_delayed = False
                                     first_collision_happened = True
+                                    break
                         if addpiece_delayed:
                             pg.time.set_timer(STOP_ADDPIECE_DELAY, addpiece_delay_duration, 1)
                             first_collision_happened = True
