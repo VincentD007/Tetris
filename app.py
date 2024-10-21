@@ -15,12 +15,13 @@ STOP_MOVEMENTDELAY = pg.event.Event(pg.USEREVENT + 4)
 STOP_ROTATIONDELAY = pg.event.Event(pg.USEREVENT + 5)
 scoretext_font = pg.font.Font("assets\gomarice_no_continue.ttf", 50)
 score_font = pg.font.Font("assets\gomarice_no_continue.ttf", 30)
+pause_text = scoretext_font.render("PAUSED", 1, (255, 255, 255))
 
 def display_score(screen, current_score):
     text = scoretext_font.render("Score", 1, (0, 255, 220))
     score = score_font.render(str(current_score), 1, (255, 255, 255))
-    screen.blit(text, (25, 25))
-    screen.blit(score, (88 - (score.get_width()/2), 85))
+    screen.blit(text, ((225 - text.get_width())/2, 25))
+    screen.blit(score, ((225 - score.get_width())/2, 85))
 
 
 class TetrisMap:
@@ -203,7 +204,7 @@ def main():
                         pg.time.set_timer(STOP_ADDPIECE_DELAY, 0)
                         addpiece_delayed = True
                         first_collision_happened = False
-
+                    #Stops PIECE_MOVEDOWN timer and adds tetromino to the map
                     elif not addpiece_delayed:
                         pg.time.set_timer(PIECE_MOVEDOWN, 0)
                         tetrismap.add(piece)
@@ -231,6 +232,7 @@ def main():
                                         piececubes_in_row += 1
                                     else:
                                         continue
+                                #Stops PIECE_MOVEDOWN timer and adds tetromino to the map and then deletes the completed rows
                                 if len(row) + piececubes_in_row == 10:
                                     pg.time.set_timer(PIECE_MOVEDOWN, 0)
                                     tetrismap.add(piece)
@@ -252,6 +254,8 @@ def main():
                             pg.time.set_timer(STOP_ADDPIECE_DELAY, addpiece_delay_duration, 1)
                             first_collision_happened = True
         tetrismap.draw()
+        if pause_game:
+            SCREEN.blit(pause_text, (WIDTH/2 - (pause_text.get_width()/2), HEIGHT - (HEIGHT/4)))
         piece.draw(SCREEN)
         display_score(SCREEN, player_score)
         pg.display.update()
