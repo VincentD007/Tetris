@@ -158,10 +158,10 @@ def main():
     while playgame:
         CLOCK.tick(60)
         events = pg.event.get()
-
         for event in events:
             if event.type == pg.QUIT:
                 playgame = False
+            #Fix bug when game paused, piece wont add if paused before timer goes off
             elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 pause_game = not pause_game
         if not pause_game:
@@ -179,13 +179,13 @@ def main():
                     pg.time.set_timer(STOP_MOVEMENTDELAY, movement_delay_duration, 1)
                     movement_delayed = True
 
-            if pg.key.get_pressed()[pg.K_SPACE] and not rotate_delayed:
+            if pg.key.get_pressed()[pg.K_DOWN] and not rotate_delayed:
                 piece.rotate()
                 rotate_delayed = True
                 pg.time.set_timer(STOP_ROTATIONDELAY, rotate_delay_duration, 1)
 
 
-            if pg.key.get_pressed()[pg.K_DOWN]:
+            if pg.key.get_pressed()[pg.K_SPACE]:
                 pg.event.post(PIECE_MOVEDOWN)
 
             for event in events:
@@ -254,9 +254,9 @@ def main():
                             pg.time.set_timer(STOP_ADDPIECE_DELAY, addpiece_delay_duration, 1)
                             first_collision_happened = True
         tetrismap.draw()
+        piece.draw(SCREEN)
         if pause_game:
             SCREEN.blit(pause_text, (WIDTH/2 - (pause_text.get_width()/2), HEIGHT - (HEIGHT/4)))
-        piece.draw(SCREEN)
         display_score(SCREEN, player_score)
         pg.display.update()
     pg.quit()
