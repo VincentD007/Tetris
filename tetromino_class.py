@@ -1,15 +1,16 @@
 import pygame as pg
+import os
 pg.init()
 
 
-purple_block = pg.transform.scale(pg.image.load("assets/purple_block.png"), (25, 25))
-blue_block = pg.transform.scale(pg.image.load("assets/blue_block.png"), (25, 25))
-orange_block = pg.transform.scale(pg.image.load("assets/orange_block.png"), (25, 25))
-green_block = pg.transform.scale(pg.image.load("assets/green_block.png"), (25, 25))
-light_blue_block = pg.transform.scale(pg.image.load("assets/light_blue_block.png"), (25, 25))
-red_block = pg.transform.scale(pg.image.load("assets/red_block.png"), (25, 25))
-yellow_block = pg.transform.scale(pg.image.load("assets/yellow_block.png"), (25, 25))
-black_block = pg.transform.scale(pg.image.load("assets/black_block.png"), (25, 25))
+purple_block = pg.transform.scale(pg.image.load(os.path.join("assets", "purple_block.png")), (25, 25))
+blue_block = pg.transform.scale(pg.image.load(os.path.join("assets", "blue_block.png")), (25, 25))
+orange_block = pg.transform.scale(pg.image.load(os.path.join("assets", "orange_block.png")), (25, 25))
+green_block = pg.transform.scale(pg.image.load(os.path.join("assets", "green_block.png")), (25, 25))
+light_blue_block = pg.transform.scale(pg.image.load(os.path.join("assets", "light_blue_block.png")), (25, 25))
+red_block = pg.transform.scale(pg.image.load(os.path.join("assets", "red_block.png")), (25, 25))
+yellow_block = pg.transform.scale(pg.image.load(os.path.join("assets", "yellow_block.png")), (25, 25))
+black_block = pg.transform.scale(pg.image.load(os.path.join("assets", "black_block.png")), (25, 25))
 
 
 class Cube:

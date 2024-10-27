@@ -1,6 +1,7 @@
 import pygame as pg
 from tetromino_class import *
 import random
+import os
 
 pg.init()
 WIDTH = 700
@@ -13,8 +14,8 @@ DEL_COLUMN = pg.event.Event(pg.USEREVENT + 2)
 STOP_ADDPIECE_DELAY = pg.event.Event(pg.USEREVENT + 3)
 STOP_MOVEMENTDELAY = pg.event.Event(pg.USEREVENT + 4)
 STOP_ROTATIONDELAY = pg.event.Event(pg.USEREVENT + 5)
-scoretext_font = pg.font.Font("assets\gomarice_no_continue.ttf", 50)
-score_font = pg.font.Font("assets\gomarice_no_continue.ttf", 30)
+scoretext_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 50)
+score_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 30)
 pause_text = scoretext_font.render("PAUSED", 1, (255, 255, 255))
 
 def display_score(screen, current_score):
@@ -161,9 +162,10 @@ def main():
         for event in events:
             if event.type == pg.QUIT:
                 playgame = False
-            #Fix bug when game paused, piece wont add if paused before timer goes off
             elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 pause_game = not pause_game
+                if first_collision_happened:
+                    addpiece_delayed = False
         if not pause_game:
             SCREEN.fill((100, 100, 100))
         else:
@@ -204,7 +206,7 @@ def main():
                         pg.time.set_timer(STOP_ADDPIECE_DELAY, 0)
                         addpiece_delayed = True
                         first_collision_happened = False
-                    #Stops PIECE_MOVEDOWN timer and adds tetromino to the map
+                    #Stops PIECE_MOVEDOWN timer and adds tetromino to the map if failed to move down
                     elif not addpiece_delayed:
                         pg.time.set_timer(PIECE_MOVEDOWN, 0)
                         tetrismap.add(piece)
@@ -222,37 +224,34 @@ def main():
                             pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
                             
                     elif not first_collision_happened:
+                        row_number = 0
                         for row in tetrismap.rows:
-                            if len(row) < 6:
-                                continue
-                            else:
-                                piececubes_in_row = 0
-                                for cube in piece.get_cubes():
-                                    if cube.rect.y // 25 == tetrismap.rows.index(row):
-                                        piececubes_in_row += 1
-                                    else:
-                                        continue
-                                #Stops PIECE_MOVEDOWN timer and adds tetromino to the map and then deletes the completed rows
-                                if len(row) + piececubes_in_row == 10:
-                                    pg.time.set_timer(PIECE_MOVEDOWN, 0)
-                                    tetrismap.add(piece)
-                                    movement_delayed = False
-                                    rotate_delayed = False
-                                    player_score += tetrismap.delete_completed_rows(player_score)
-                                    if len(tetrismap.out_of_bounds) > 0:
-                                        game_loose = True
-                                    else:
-                                        piece = next_piece
-                                        next_piece = next_piece2
+                            piececubes_in_row = 0
+                            for cube in piece.get_cubes():
+                                if cube.rect.y // 25 == row_number:
+                                    piececubes_in_row += 1
+                            #Stops PIECE_MOVEDOWN timer and adds tetromino to the map and then deletes the completed rows
+                            if len(row) + piececubes_in_row == 10:
+                                pg.time.set_timer(PIECE_MOVEDOWN, 0)
+                                tetrismap.add(piece)
+                                movement_delayed = False
+                                rotate_delayed = False
+                                player_score += tetrismap.delete_completed_rows(player_score)
+                                if len(tetrismap.out_of_bounds) > 0:
+                                    game_loose = True
+                                else:
+                                    piece = next_piece
+                                    next_piece = next_piece2
+                                    next_piece2 = tetrismap.new_piece(level)
+                                    while type(piece) == (type(next_piece) and type(next_piece2)):
                                         next_piece2 = tetrismap.new_piece(level)
-                                        while type(piece) == (type(next_piece) and type(next_piece2)):
-                                            next_piece2 = tetrismap.new_piece(level)
+                                    pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
+                                break
+                            elif row_number == 19:
+                                pg.time.set_timer(STOP_ADDPIECE_DELAY, addpiece_delay_duration, 1)
+                                first_collision_happened = True
+                            row_number += 1
 
-                                        pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
-                                    break
-                        if addpiece_delayed:
-                            pg.time.set_timer(STOP_ADDPIECE_DELAY, addpiece_delay_duration, 1)
-                            first_collision_happened = True
         tetrismap.draw()
         piece.draw(SCREEN)
         if pause_game:
