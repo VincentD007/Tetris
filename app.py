@@ -14,22 +14,56 @@ DEL_COLUMN = pg.event.Event(pg.USEREVENT + 2)
 STOP_ADDPIECE_DELAY = pg.event.Event(pg.USEREVENT + 3)
 STOP_MOVEMENTDELAY = pg.event.Event(pg.USEREVENT + 4)
 STOP_ROTATIONDELAY = pg.event.Event(pg.USEREVENT + 5)
-scoretext_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 50)
+
+text_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 50)
 score_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 30)
-pause_text = scoretext_font.render("PAUSED", 1, (255, 255, 255))
+pause_text = text_font.render("PAUSED", 1, (255, 255, 255))
+
+
+tetrominos = {
+    Tpiece : pg.image.load(os.path.join("assets", "Tpiece.png")),
+    Ipiece : pg.image.load(os.path.join("assets", "Ipiece.png")),
+    Jpiece : pg.image.load(os.path.join("assets", "Jpiece.png")),
+    Lpiece : pg.image.load(os.path.join("assets", "Lpiece.png")),
+    Opiece : pg.image.load(os.path.join("assets", "Opiece.png")),
+    Spiece : pg.image.load(os.path.join("assets", "Spiece.png")),
+    Zpiece : pg.image.load(os.path.join("assets", "Zpiece.png")),
+}
+
 
 def display_score(screen, current_score):
-    text = scoretext_font.render("Score", 1, (0, 255, 220))
+    text = text_font.render("Score", 1, (0, 255, 220))
     score = score_font.render(str(current_score), 1, (255, 255, 255))
     screen.blit(text, ((225 - text.get_width())/2, 25))
     screen.blit(score, ((225 - score.get_width())/2, 85))
 
+
+def display_next_pieces(screen, pieces: list) -> None:
+    text = text_font.render("Up Next", 1, (0, 0, 0))
+    screen.blit(text, (475 + ((WIDTH-475) - (text.get_width()))/2, 25))
+    y_cord = 25 + text.get_height() + 40
+    for piece in pieces:
+        screen.blit(tetrominos[type(piece)], (475 + ((WIDTH-475) - (tetrominos[type(piece)].get_width()))/2, y_cord))
+        y_cord += 80
+
+
+def random_piece(lvl: int, map) -> Piece: 
+    if lvl == 1:
+        return random.choice([
+        Tpiece("purple", map), Ipiece("light_blue", map), 
+        Jpiece("blue", map), Lpiece("orange", map), 
+        Opiece("yellow", map), Spiece("green", map), Zpiece("red", map)
+        ])
+    
 
 class TetrisMap:
     def __init__(self, screen):  
         self.rows = [[] for _ in range(20)]
         self.out_of_bounds = []
         self.screen = screen
+        self.level = 1
+        self.next_pieces = [random_piece(self.level, self), random_piece(self.level, self), random_piece(self.level, self)]
+
 
 
     def add(self, tetris_piece):
@@ -94,6 +128,7 @@ class TetrisMap:
             self.screen.fill((100, 100, 100))
             self.draw()
             display_score(self.screen, current_score + points_earned)
+            display_next_pieces(self.screen, self.next_pieces)
             pg.display.update()
         for row in completed_rows:
             del self.rows[row]
@@ -114,6 +149,7 @@ class TetrisMap:
             self.screen.fill((100, 100, 100))
             self.draw()
             display_score(self.screen, current_score + points_earned)
+            display_next_pieces(self.screen, self.next_pieces)
             pg.display.update()
 
         return points_earned
@@ -123,14 +159,20 @@ class TetrisMap:
         return self.rows[i]
 
 
-    def new_piece(self, lvl):
-        if lvl == 1:
-            return random.choice([
-            Tpiece("purple", self), Ipiece("light_blue", self), 
-            Jpiece("blue", self), Lpiece("orange", self), 
-            Opiece("yellow", self), Spiece("green", self), Zpiece("red", self)
-            ])
-
+    def new_piece(self, lvl: int) -> Piece:
+        new_piece = None
+        if lvl == self.level:
+            new_piece = self.next_pieces[0]
+            del self.next_pieces[0]
+            self.next_pieces.append(random_piece(lvl, self))
+        else:
+            self.level = lvl
+            self.next_pieces.clear()
+            self.next_pieces.extend([random_piece(lvl, self), random_piece(lvl, self), random_piece(lvl, self)])
+            new_piece = self.next_pieces[0]
+            del self.next_pieces[0]
+            self.next_pieces.append(random_piece(lvl, self))
+        return new_piece
 
 
 def main():
@@ -149,12 +191,7 @@ def main():
     fall_delay = 200
     level = 1
 
-    next_piece2 = tetrismap.new_piece(level)
-    next_piece = tetrismap.new_piece(level)
     piece = tetrismap.new_piece(level)
-    while type(piece) == (type(next_piece) and type(next_piece2)):
-        next_piece2 = tetrismap.new_piece(level)
-
     pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
     while playgame:
         CLOCK.tick(60)
@@ -206,21 +243,15 @@ def main():
                         pg.time.set_timer(STOP_ADDPIECE_DELAY, 0)
                         addpiece_delayed = True
                         first_collision_happened = False
-                    #Stops PIECE_MOVEDOWN timer and adds tetromino to the map if failed to move down
                     elif not addpiece_delayed:
                         pg.time.set_timer(PIECE_MOVEDOWN, 0)
                         tetrismap.add(piece)
                         movement_delayed = False
                         rotate_delayed = False
-                        if len(tetrismap.out_of_bounds) > 0:
+                        if len(tetrismap.out_of_bounds) > 0: #Ends the game if the Pieces go past the ceiling
                             game_loose = True
-                        else:
-                            piece = next_piece
-                            next_piece = next_piece2
-                            next_piece2 = tetrismap.new_piece(level)
-                            while type(piece) == (type(next_piece) and type(next_piece2)):
-                                next_piece2 = tetrismap.new_piece(level)
-
+                        else: #Renders a new piece if the player has not lost the game
+                            piece = tetrismap.new_piece(level)
                             pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
                             
                     elif not first_collision_happened:
@@ -240,11 +271,7 @@ def main():
                                 if len(tetrismap.out_of_bounds) > 0:
                                     game_loose = True
                                 else:
-                                    piece = next_piece
-                                    next_piece = next_piece2
-                                    next_piece2 = tetrismap.new_piece(level)
-                                    while type(piece) == (type(next_piece) and type(next_piece2)):
-                                        next_piece2 = tetrismap.new_piece(level)
+                                    piece = tetrismap.new_piece(level)
                                     pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
                                 break
                             elif row_number == 19:
@@ -257,6 +284,7 @@ def main():
         if pause_game:
             SCREEN.blit(pause_text, (WIDTH/2 - (pause_text.get_width()/2), HEIGHT - (HEIGHT/4)))
         display_score(SCREEN, player_score)
+        display_next_pieces(SCREEN, tetrismap.next_pieces)
         pg.display.update()
     pg.quit()
 
