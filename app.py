@@ -2,6 +2,7 @@ import pygame as pg
 from tetromino_class import *
 import random
 import os
+import sys
 
 pg.init()
 WIDTH = 700
@@ -15,9 +16,9 @@ STOP_ADDPIECE_DELAY = pg.event.Event(pg.USEREVENT + 3)
 STOP_MOVEMENTDELAY = pg.event.Event(pg.USEREVENT + 4)
 STOP_ROTATIONDELAY = pg.event.Event(pg.USEREVENT + 5)
 
-text_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 50)
-score_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 30)
-pause_text = text_font.render("PAUSED", 1, (255, 255, 255))
+TEXT_FONT = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 50)
+SCORE_FONT = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 30)
+PAUSE_TEXT = TEXT_FONT.render("PAUSED", 1, (255, 255, 255))
 
 
 tetrominos = {
@@ -32,14 +33,14 @@ tetrominos = {
 
 
 def display_score(screen, current_score):
-    text = text_font.render("Score", 1, (0, 255, 220))
-    score = score_font.render(str(current_score), 1, (255, 255, 255))
+    text = TEXT_FONT.render("Score", 1, (0, 255, 220))
+    score = SCORE_FONT.render(str(current_score), 1, (255, 255, 255))
     screen.blit(text, ((225 - text.get_width())/2, 25))
     screen.blit(score, ((225 - score.get_width())/2, 85))
 
 
 def display_next_pieces(screen, pieces: list) -> None:
-    text = text_font.render("Up Next", 1, (0, 0, 0))
+    text = TEXT_FONT.render("Up Next", 1, (255, 255, 255))
     screen.blit(text, (475 + ((WIDTH-475) - (text.get_width()))/2, 25))
     y_cord = 25 + text.get_height() + 40
     for piece in pieces:
@@ -57,10 +58,9 @@ def random_piece(lvl: int, map) -> Piece:
     
 
 class TetrisMap:
-    def __init__(self, screen):  
+    def __init__(self):  
         self.rows = [[] for _ in range(20)]
         self.out_of_bounds = []
-        self.screen = screen
         self.level = 1
         self.next_pieces = [random_piece(self.level, self), random_piece(self.level, self), random_piece(self.level, self)]
 
@@ -81,23 +81,23 @@ class TetrisMap:
         spacing = 25
         for _ in range(20):
             if _ == 19:
-                pg.draw.rect(self.screen, (0, 0, 0), pg.rect.Rect(225, spacing - 1, 250, 8))
+                pg.draw.rect(SCREEN, (0, 0, 0), pg.rect.Rect(225, spacing - 1, 250, 8))
             else:
-                pg.draw.rect(self.screen, (0, 0, 0), pg.rect.Rect(225, spacing - 1, 250, 2))
+                pg.draw.rect(SCREEN, (0, 0, 0), pg.rect.Rect(225, spacing - 1, 250, 2))
             spacing += 25
         spacing = 25
         for _ in range(11):
             if _ == 0:
-                pg.draw.rect(self.screen, (0, 0, 0), pg.rect.Rect(193 + spacing, 0, 8, 507))
+                pg.draw.rect(SCREEN, (0, 0, 0), pg.rect.Rect(193 + spacing, 0, 8, 507))
             elif _ == 10:
-                pg.draw.rect(self.screen, (0, 0, 0), pg.rect.Rect(199 + spacing, 0, 8, 507))
+                pg.draw.rect(SCREEN, (0, 0, 0), pg.rect.Rect(199 + spacing, 0, 8, 507))
             else:
-                pg.draw.rect(self.screen, (0, 0, 0), pg.rect.Rect(199 + spacing, 0, 2, 507))
+                pg.draw.rect(SCREEN, (0, 0, 0), pg.rect.Rect(199 + spacing, 0, 2, 507))
             spacing += 25
             
         for row in self.rows:
             for cube in row:
-                cube.draw(self.screen)
+                cube.draw(SCREEN)
 
     @property
     def completed_rows(self):
@@ -125,10 +125,10 @@ class TetrisMap:
                         del self.rows[row][del_index]
                     len_rows -= 2
                     pg.time.set_timer(DEL_COLUMN, 60, 9)
-            self.screen.fill((100, 100, 100))
+            SCREEN.fill((100, 100, 100))
             self.draw()
-            display_score(self.screen, current_score + points_earned)
-            display_next_pieces(self.screen, self.next_pieces)
+            display_score(SCREEN, current_score + points_earned)
+            display_next_pieces(SCREEN, self.next_pieces)
             pg.display.update()
         for row in completed_rows:
             del self.rows[row]
@@ -146,10 +146,10 @@ class TetrisMap:
                         unsettled_cubes += 1
             if unsettled_cubes == 0:
                 rows_falling = False
-            self.screen.fill((100, 100, 100))
+            SCREEN.fill((100, 100, 100))
             self.draw()
-            display_score(self.screen, current_score + points_earned)
-            display_next_pieces(self.screen, self.next_pieces)
+            display_score(SCREEN, current_score + points_earned)
+            display_next_pieces(SCREEN, self.next_pieces)
             pg.display.update()
 
         return points_earned
@@ -173,13 +173,19 @@ class TetrisMap:
             del self.next_pieces[0]
             self.next_pieces.append(random_piece(lvl, self))
         return new_piece
+    
+
+    def reset(self):
+        self.rows = [[] for _ in range(20)]
+        self.out_of_bounds = []
+        self.level = 1
+        self.next_pieces = [random_piece(self.level, self), random_piece(self.level, self), random_piece(self.level, self)]
 
 
-def main():
-    tetrismap = TetrisMap(SCREEN)
+def new_game():
+    tetrismap = TetrisMap()
     player_score = 0
     game_loose = False
-    pause_game = False
     addpiece_delayed = True
     movement_delayed = False
     rotate_delayed = False
@@ -200,14 +206,12 @@ def main():
             if event.type == pg.QUIT:
                 playgame = False
             elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
-                pause_game = not pause_game
+                pause_game(tetrismap, piece, player_score)
                 if first_collision_happened:
                     addpiece_delayed = False
-        if not pause_game:
-            SCREEN.fill((100, 100, 100))
-        else:
-            SCREEN.fill((50, 50, 50))
-        if not game_loose and not pause_game:
+        
+        SCREEN.fill((100, 100, 100))
+        if not game_loose:
             if (pg.key.get_pressed()[pg.K_LEFT] or pg.key.get_pressed()[pg.K_RIGHT]) and not movement_delayed:
                 if pg.key.get_pressed()[pg.K_LEFT] and not pg.key.get_pressed()[pg.K_RIGHT]:
                     piece.move("left")
@@ -281,12 +285,34 @@ def main():
 
         tetrismap.draw()
         piece.draw(SCREEN)
-        if pause_game:
-            SCREEN.blit(pause_text, (WIDTH/2 - (pause_text.get_width()/2), HEIGHT - (HEIGHT/4)))
         display_score(SCREEN, player_score)
         display_next_pieces(SCREEN, tetrismap.next_pieces)
         pg.display.update()
     pg.quit()
 
+
+def pause_game(active_map:TetrisMap, piece:Piece, current_score:int):
+    paused = True
+    quit = False
+    while paused and not quit:
+        events = pg.event.get()
+        for event in events:
+            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                paused = False
+            elif event.type == pg.QUIT:
+                quit = True
+        SCREEN.fill((50, 50, 50))
+        active_map.draw()
+        piece.draw(SCREEN)
+        display_score(SCREEN, current_score)
+        display_next_pieces(SCREEN, active_map.next_pieces)
+        SCREEN.blit(PAUSE_TEXT, (WIDTH/2 - (PAUSE_TEXT.get_width()/2), HEIGHT - (HEIGHT/4)))
+        display_next_pieces(SCREEN, active_map.next_pieces)
+        pg.display.update()
+    
+    if quit:
+        pg.quit()
+        sys.exit(status:=0)
+
 if __name__ == "__main__":
-    main() 
+    new_game() 
