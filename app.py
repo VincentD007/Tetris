@@ -1,10 +1,9 @@
 import pygame as pg
 from tetromino_class import *
-import random
-import os
-import sys
+import random, os
 
 pg.init()
+game_state = 0 # 0 = main_menu; 1 = game_running; QUIT = 2
 WIDTH = 700
 HEIGHT = 700
 SCREEN = pg.display.set_mode((WIDTH, HEIGHT))
@@ -109,6 +108,7 @@ class TetrisMap:
     
 
     def delete_completed_rows(self, score):
+        global game_state # 0 = main_menu; 1 = game_running; QUIT = 2
         current_score = score
         points_earned = 0
         completed_rows = self.completed_rows
@@ -116,7 +116,9 @@ class TetrisMap:
             return points_earned
         pg.event.post(DEL_COLUMN)
         len_rows = 10
-        while len_rows > 0: 
+        while len_rows > 0:
+            if game_state == 2:
+                return
             for event in pg.event.get():
                 if event == DEL_COLUMN:
                     for row in completed_rows:
@@ -124,7 +126,12 @@ class TetrisMap:
                         del self.rows[row][del_index]
                         del self.rows[row][del_index]
                     len_rows -= 2
-                    pg.time.set_timer(DEL_COLUMN, 60, 9)
+                    pg.time.set_timer(DEL_COLUMN, 60, 1)
+                elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                    pause_game(self, current_score)
+                    pg.event.post(DEL_COLUMN)
+                elif event.type == pg.QUIT:
+                    game_state = 2
             SCREEN.fill((100, 100, 100))
             self.draw()
             display_score(SCREEN, current_score + points_earned)
@@ -137,6 +144,11 @@ class TetrisMap:
 
         rows_falling = True
         while rows_falling:
+            if game_state == 2:
+                return
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    game_state = 2
             CLOCK.tick(120)
             unsettled_cubes = 0
             for row_index in range(0, 20):
@@ -183,6 +195,7 @@ class TetrisMap:
 
 
 def new_game():
+    global game_state # 0 = main_menu; 1 = game_running; QUIT = 2
     tetrismap = TetrisMap()
     player_score = 0
     game_loose = False
@@ -199,14 +212,14 @@ def new_game():
 
     piece = tetrismap.new_piece(level)
     pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
-    while playgame:
+    while game_state == 1:
         CLOCK.tick(60)
         events = pg.event.get()
         for event in events:
             if event.type == pg.QUIT:
-                playgame = False
+                game_state = 2
             elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
-                pause_game(tetrismap, piece, player_score)
+                pause_game(tetrismap, player_score, piece)
                 if first_collision_happened:
                     addpiece_delayed = False
         
@@ -271,7 +284,12 @@ def new_game():
                                 tetrismap.add(piece)
                                 movement_delayed = False
                                 rotate_delayed = False
-                                player_score += tetrismap.delete_completed_rows(player_score)
+
+                                try:
+                                    player_score += tetrismap.delete_completed_rows(player_score)
+                                except TypeError:
+                                    return
+
                                 if len(tetrismap.out_of_bounds) > 0:
                                     game_loose = True
                                 else:
@@ -282,37 +300,52 @@ def new_game():
                                 pg.time.set_timer(STOP_ADDPIECE_DELAY, addpiece_delay_duration, 1)
                                 first_collision_happened = True
                             row_number += 1
-
         tetrismap.draw()
         piece.draw(SCREEN)
         display_score(SCREEN, player_score)
         display_next_pieces(SCREEN, tetrismap.next_pieces)
         pg.display.update()
-    pg.quit()
 
 
-def pause_game(active_map:TetrisMap, piece:Piece, current_score:int):
+def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
+    global game_state # 0 = main_menu; 1 = game_running; QUIT = 2
     paused = True
-    quit = False
-    while paused and not quit:
+    while paused:
         events = pg.event.get()
         for event in events:
             if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 paused = False
             elif event.type == pg.QUIT:
-                quit = True
+                game_state = 2
+                paused = False
         SCREEN.fill((50, 50, 50))
         active_map.draw()
-        piece.draw(SCREEN)
+        if piece is not None:
+            piece.draw(SCREEN)
         display_score(SCREEN, current_score)
         display_next_pieces(SCREEN, active_map.next_pieces)
         SCREEN.blit(PAUSE_TEXT, (WIDTH/2 - (PAUSE_TEXT.get_width()/2), HEIGHT - (HEIGHT/4)))
         display_next_pieces(SCREEN, active_map.next_pieces)
         pg.display.update()
-    
-    if quit:
-        pg.quit()
-        sys.exit(status:=0)
+
+
+def main_menu():
+    global game_state # 0 = main_menu; 1 = game_running; QUIT = 2
+    menu_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 100)
+    title = menu_font.render("TETRIS", True, (255, 255, 255))
+    while game_state != 2:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                game_state = 2
+            elif event.type == pg.KEYDOWN and event.key == pg.K_p:
+                game_state = 1
+        SCREEN.fill((0, 0, 0))
+        SCREEN.blit(title, ((SCREEN.get_width()/2)-(title.get_width()/2), SCREEN.get_height()/6))
+        pg.display.update()
+        if game_state == 1:
+            new_game()
+
 
 if __name__ == "__main__":
-    new_game() 
+    main_menu()
+ 
