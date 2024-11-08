@@ -3,7 +3,7 @@ from tetromino_class import *
 import random, os
 
 pg.init()
-game_state = 0 # 0 = main_menu; 1 = game_running; QUIT = 2
+game_state = 0 # 0 = main_menu; 1 = game_running; 2 = QUIT
 WIDTH = 700
 HEIGHT = 700
 SCREEN = pg.display.set_mode((WIDTH, HEIGHT))
@@ -108,7 +108,7 @@ class TetrisMap:
     
 
     def delete_completed_rows(self, score):
-        global game_state # 0 = main_menu; 1 = game_running; QUIT = 2
+        global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
         current_score = score
         points_earned = 0
         completed_rows = self.completed_rows
@@ -195,7 +195,7 @@ class TetrisMap:
 
 
 def new_game():
-    global game_state # 0 = main_menu; 1 = game_running; QUIT = 2
+    global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
     tetrismap = TetrisMap()
     player_score = 0
     game_loose = False
@@ -308,7 +308,7 @@ def new_game():
 
 
 def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
-    global game_state # 0 = main_menu; 1 = game_running; QUIT = 2
+    global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
     paused = True
     while paused:
         events = pg.event.get()
@@ -330,7 +330,7 @@ def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
 
 
 def main_menu():
-    global game_state # 0 = main_menu; 1 = game_running; QUIT = 2
+    global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
     menu_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 100)
     title = menu_font.render("TETRIS", True, (255, 255, 255))
     while game_state != 2:
