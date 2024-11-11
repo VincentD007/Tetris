@@ -107,7 +107,7 @@ class TetrisMap:
         return completed_rows
     
 
-    def delete_completed_rows(self, score):
+    def delete_completed_rows(self, score:int):
         global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
         current_score = score
         points_earned = 0
@@ -198,7 +198,7 @@ def new_game():
     global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
     tetrismap = TetrisMap()
     player_score = 0
-    game_loose = False
+    game_over = False
     addpiece_delayed = True
     movement_delayed = False
     rotate_delayed = False
@@ -206,7 +206,6 @@ def new_game():
     movement_delay_duration = 100
     rotate_delay_duration = 120
     first_collision_happened = False
-    playgame = True
     fall_delay = 200
     level = 1
 
@@ -224,7 +223,7 @@ def new_game():
                     addpiece_delayed = False
         
         SCREEN.fill((100, 100, 100))
-        if not game_loose:
+        if not game_over:
             if (pg.key.get_pressed()[pg.K_LEFT] or pg.key.get_pressed()[pg.K_RIGHT]) and not movement_delayed:
                 if pg.key.get_pressed()[pg.K_LEFT] and not pg.key.get_pressed()[pg.K_RIGHT]:
                     piece.move("left")
@@ -265,8 +264,8 @@ def new_game():
                         tetrismap.add(piece)
                         movement_delayed = False
                         rotate_delayed = False
-                        if len(tetrismap.out_of_bounds) > 0: #Ends the game if the Pieces go past the ceiling
-                            game_loose = True
+                        if len(tetrismap.out_of_bounds) > 0: #Ends the game if the Piece goes out of bounds
+                            game_over = True
                         else: #Renders a new piece if the player has not lost the game
                             piece = tetrismap.new_piece(level)
                             pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
@@ -291,7 +290,7 @@ def new_game():
                                     return
 
                                 if len(tetrismap.out_of_bounds) > 0:
-                                    game_loose = True
+                                    game_over = True
                                 else:
                                     piece = tetrismap.new_piece(level)
                                     pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
@@ -331,17 +330,52 @@ def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
 
 def main_menu():
     global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
+    mousebuttondown = False
     menu_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 100)
+    button_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 30)
+    play_button = pg.rect.Rect(WIDTH/2 - 75, HEIGHT/2, 150, 50)
+    quit_button = pg.rect.Rect(WIDTH/2 - 75, play_button.y + 80, 150, 50)
+    play_button_clicked = pg.rect.Rect(WIDTH/2 - 69, HEIGHT/2, 138, 46)
+    quit_button_clicked = pg.rect.Rect(WIDTH/2 - 69, play_button.y + 80, 138, 46)
+    play_button_text = button_font.render("Play Game", 1, (0, 0, 0))
+    quit_button_text = button_font.render("Quit Game", 1, (0, 0, 0))
     title = menu_font.render("TETRIS", True, (255, 255, 255))
+
     while game_state != 2:
+        mouse_x, mouse_y = pg.mouse.get_pos()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 game_state = 2
             elif event.type == pg.KEYDOWN and event.key == pg.K_p:
                 game_state = 1
+            elif event.type == pg.MOUSEBUTTONDOWN:
+                mousebuttondown = True
+            elif event.type == pg.MOUSEBUTTONUP:
+                mousebuttondown = False
         SCREEN.fill((0, 0, 0))
+        print(mousebuttondown)
         SCREEN.blit(title, ((SCREEN.get_width()/2)-(title.get_width()/2), SCREEN.get_height()/6))
+        if play_button.x < mouse_x < play_button.x + play_button.width and play_button.y < mouse_y < play_button.y + play_button.height:
+            if mousebuttondown:
+                pg.draw.rect(SCREEN, (150, 150, 150), play_button_clicked)
+                pg.draw.rect(SCREEN, (255, 255, 255), quit_button)
+            else:
+                pg.draw.rect(SCREEN, (150, 150, 150), play_button)
+                pg.draw.rect(SCREEN, (255, 255, 255), quit_button)
+        elif quit_button.x < mouse_x < quit_button.x + play_button.width and quit_button.y < mouse_y < quit_button.y + play_button.height:
+            if mousebuttondown:
+                pg.draw.rect(SCREEN, (150, 150, 150), quit_button_clicked)
+                pg.draw.rect(SCREEN, (255, 255, 255), play_button)
+            else:
+                pg.draw.rect(SCREEN, (150, 150, 150), quit_button)
+                pg.draw.rect(SCREEN, (255, 255, 255), play_button)
+        else:
+            pg.draw.rect(SCREEN, (255, 255, 255), play_button)
+            pg.draw.rect(SCREEN, (255, 255, 255), quit_button)
+        SCREEN.blit(play_button_text, (play_button.x + ((play_button.width - play_button_text.get_width())/2), play_button.y + ((play_button.height - play_button_text.get_height())/2)))
+        SCREEN.blit(quit_button_text, (quit_button.x + ((quit_button.width - quit_button_text.get_width())/2), quit_button.y + ((quit_button.height - quit_button_text.get_height())/2)))
         pg.display.update()
+
         if game_state == 1:
             new_game()
 
