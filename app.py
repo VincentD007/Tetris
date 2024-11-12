@@ -1,6 +1,6 @@
 import pygame as pg
 from tetromino_class import *
-import random, os
+import random, os, sys
 
 pg.init()
 game_state = 0 # 0 = main_menu; 1 = game_running; 2 = QUIT
@@ -330,16 +330,71 @@ def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
 
 def main_menu():
     global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
-    mousebuttondown = False
     menu_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 100)
     button_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 30)
     play_button = pg.rect.Rect(WIDTH/2 - 75, HEIGHT/2, 150, 50)
-    quit_button = pg.rect.Rect(WIDTH/2 - 75, play_button.y + 80, 150, 50)
     play_button_clicked = pg.rect.Rect(WIDTH/2 - 69, HEIGHT/2, 138, 46)
+    quit_button = pg.rect.Rect(WIDTH/2 - 75, play_button.y + 80, 150, 50)
     quit_button_clicked = pg.rect.Rect(WIDTH/2 - 69, play_button.y + 80, 138, 46)
     play_button_text = button_font.render("Play Game", 1, (0, 0, 0))
     quit_button_text = button_font.render("Quit Game", 1, (0, 0, 0))
     title = menu_font.render("TETRIS", True, (255, 255, 255))
+    play_button = pg.rect.Rect(WIDTH/2 - 75, HEIGHT/2, 150, 50)
+    quit_button = pg.rect.Rect(WIDTH/2 - 75, play_button.y + 80, 150, 50)
+
+    def play_button_hover():
+        global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
+        clicked = False
+        mouse_x, mouse_y = pg.mouse.get_pos()
+        while play_button.x < mouse_x < play_button.x + play_button.width and play_button.y < mouse_y < play_button.y + play_button.height:
+            if len(pg.event.get(pg.MOUSEBUTTONDOWN)) > 0:
+                clicked = True
+            elif len(pg.event.get(pg.MOUSEBUTTONUP)) > 0:
+                clicked = False
+
+            SCREEN.fill((0, 0, 0))
+            if clicked:
+                pg.draw.rect(SCREEN, (150, 150, 150), play_button_clicked)
+                pg.draw.rect(SCREEN, (255, 255, 255), quit_button)
+                game_state = 1
+                return
+            else:
+                pg.draw.rect(SCREEN, (150, 150, 150), play_button)
+                pg.draw.rect(SCREEN, (255, 255, 255), quit_button)
+
+            SCREEN.blit(title, ((SCREEN.get_width()/2)-(title.get_width()/2), SCREEN.get_height()/6))
+            SCREEN.blit(play_button_text, (play_button.x + ((play_button.width - play_button_text.get_width())/2), play_button.y + ((play_button.height - play_button_text.get_height())/2)))
+            SCREEN.blit(quit_button_text, (quit_button.x + ((quit_button.width - quit_button_text.get_width())/2), quit_button.y + ((quit_button.height - quit_button_text.get_height())/2)))
+            pg.display.update()
+            mouse_x, mouse_y = pg.mouse.get_pos()
+
+
+    def quit_button_hover():
+        global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
+        clicked = False
+        mouse_x, mouse_y = pg.mouse.get_pos()
+        while quit_button.x < mouse_x < quit_button.x + play_button.width and quit_button.y < mouse_y < quit_button.y + play_button.height:
+            if len(pg.event.get(pg.MOUSEBUTTONDOWN)) > 0:
+                clicked = True
+            elif len(pg.event.get(pg.MOUSEBUTTONUP)) > 0:
+                clicked = False
+
+            SCREEN.fill((0, 0, 0))
+            if clicked:
+                pg.draw.rect(SCREEN, (150, 150, 150), quit_button_clicked)
+                pg.draw.rect(SCREEN, (255, 255, 255), play_button)
+                game_state = 2
+                return
+            else:
+                pg.draw.rect(SCREEN, (150, 150, 150), quit_button)
+                pg.draw.rect(SCREEN, (255, 255, 255), play_button)
+
+            SCREEN.blit(title, ((SCREEN.get_width()/2)-(title.get_width()/2), SCREEN.get_height()/6))
+            SCREEN.blit(play_button_text, (play_button.x + ((play_button.width - play_button_text.get_width())/2), play_button.y + ((play_button.height - play_button_text.get_height())/2)))
+            SCREEN.blit(quit_button_text, (quit_button.x + ((quit_button.width - quit_button_text.get_width())/2), quit_button.y + ((quit_button.height - quit_button_text.get_height())/2)))
+            pg.display.update() 
+            mouse_x, mouse_y = pg.mouse.get_pos()
+
 
     while game_state != 2:
         mouse_x, mouse_y = pg.mouse.get_pos()
@@ -348,33 +403,24 @@ def main_menu():
                 game_state = 2
             elif event.type == pg.KEYDOWN and event.key == pg.K_p:
                 game_state = 1
-            elif event.type == pg.MOUSEBUTTONDOWN:
-                mousebuttondown = True
-            elif event.type == pg.MOUSEBUTTONUP:
-                mousebuttondown = False
-        SCREEN.fill((0, 0, 0))
-        print(mousebuttondown)
-        SCREEN.blit(title, ((SCREEN.get_width()/2)-(title.get_width()/2), SCREEN.get_height()/6))
-        if play_button.x < mouse_x < play_button.x + play_button.width and play_button.y < mouse_y < play_button.y + play_button.height:
-            if mousebuttondown:
-                pg.draw.rect(SCREEN, (150, 150, 150), play_button_clicked)
-                pg.draw.rect(SCREEN, (255, 255, 255), quit_button)
+
+        if game_state != 2:
+            if play_button.x < mouse_x < play_button.x + play_button.width and play_button.y < mouse_y < play_button.y + play_button.height:
+                play_button_hover()
+            elif quit_button.x < mouse_x < quit_button.x + play_button.width and quit_button.y < mouse_y < quit_button.y + play_button.height:
+                quit_button_hover()
             else:
-                pg.draw.rect(SCREEN, (150, 150, 150), play_button)
+                SCREEN.fill((0, 0, 0))
+                SCREEN.blit(title, ((SCREEN.get_width()/2)-(title.get_width()/2), SCREEN.get_height()/6))
+                pg.draw.rect(SCREEN, (255, 255, 255), play_button)
                 pg.draw.rect(SCREEN, (255, 255, 255), quit_button)
-        elif quit_button.x < mouse_x < quit_button.x + play_button.width and quit_button.y < mouse_y < quit_button.y + play_button.height:
-            if mousebuttondown:
-                pg.draw.rect(SCREEN, (150, 150, 150), quit_button_clicked)
-                pg.draw.rect(SCREEN, (255, 255, 255), play_button)
-            else:
-                pg.draw.rect(SCREEN, (150, 150, 150), quit_button)
-                pg.draw.rect(SCREEN, (255, 255, 255), play_button)
-        else:
-            pg.draw.rect(SCREEN, (255, 255, 255), play_button)
-            pg.draw.rect(SCREEN, (255, 255, 255), quit_button)
-        SCREEN.blit(play_button_text, (play_button.x + ((play_button.width - play_button_text.get_width())/2), play_button.y + ((play_button.height - play_button_text.get_height())/2)))
-        SCREEN.blit(quit_button_text, (quit_button.x + ((quit_button.width - quit_button_text.get_width())/2), quit_button.y + ((quit_button.height - quit_button_text.get_height())/2)))
-        pg.display.update()
+                playbuttontext_cords_x = play_button.x + (play_button.width - play_button_text.get_width())/2
+                playbuttontext_cords_y = play_button.y + (play_button.height - play_button_text.get_height())/2
+                quitbuttontext_cords_x = quit_button.x + (quit_button.width - quit_button_text.get_width())/2
+                quitbuttontext_cords_y = quit_button.y + (quit_button.height - quit_button_text.get_height())/2
+                SCREEN.blit(play_button_text, (playbuttontext_cords_x, playbuttontext_cords_y))
+                SCREEN.blit(quit_button_text, (quitbuttontext_cords_x, quitbuttontext_cords_y))
+                pg.display.update()
 
         if game_state == 1:
             new_game()
@@ -382,4 +428,3 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
- 
