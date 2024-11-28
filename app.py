@@ -18,7 +18,6 @@ STOP_ROTATIONDELAY = pg.event.Event(pg.USEREVENT + 5)
 
 TEXT_FONT = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 50)
 SCORE_FONT = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 30)
-PAUSE_TEXT = TEXT_FONT.render("PAUSED", 1, (255, 255, 255))
 
 
 tetrominos = {
@@ -31,6 +30,10 @@ tetrominos = {
     Zpiece : pg.image.load(os.path.join("assets", "Zpiece.png")),
 }
 
+resume_button = Button(150, 50, (WIDTH/2 - 71, HEIGHT - 160), (255, 255, 255), "Resume")
+main_menu_button = Button(150, 50, (WIDTH/2 - 71, HEIGHT - 80), (255, 255, 255), "Main Menu")
+play_button = Button(150, 50, (WIDTH/2 - 75, HEIGHT/2), (255, 255, 255), "Play Game")
+quit_button = Button(150, 50, (WIDTH/2 - 75, (HEIGHT/2) + 80), (255, 255, 255), "Quit Game")
 
 def display_score(screen, current_score):
     text = TEXT_FONT.render("Score", 1, (0, 255, 220))
@@ -307,21 +310,41 @@ def new_game():
         pg.display.update()
 
 
+def button_hover(button: Button, display_func):
+    button.user_hover = True
+    clicked = False
+    released = False
+    while cursor_on_button(button):
+        button_click = pg.event.get(pg.MOUSEBUTTONDOWN)
+        button_release = pg.event.get(pg.MOUSEBUTTONUP)
+        if len(button_click) > 0:
+            if button_click[0].button == 1:
+                clicked = True
+                button.pressed = True
+        if len(button_release) > 0:
+            if button_release[0].button == 1 and clicked:
+                button.pressed = False
+                released = True
+        if clicked and released:
+            button.clicked = True
+            break
+        else:
+            display_func()
+    button.pressed = False
+    button.user_hover = False
+
+
 def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
-    def display_pause_menu():
-        pass
-
-
-    def resume_button_hover():
-        pass
-
-    
-    def menu_button_hover():
-        pass
-
-
     global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
     paused = True
+    def display_pause_menu():
+        display_score(SCREEN, current_score)
+        display_next_pieces(SCREEN, active_map.next_pieces)
+        resume_button.draw(SCREEN)
+        main_menu_button.draw(SCREEN)
+        pg.display.update()
+
+
     while paused:
         events = pg.event.get()
         for event in events:
@@ -334,20 +357,13 @@ def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
         active_map.draw()
         if piece is not None:
             piece.draw(SCREEN)
-        display_score(SCREEN, current_score)
-        display_next_pieces(SCREEN, active_map.next_pieces)
-        SCREEN.blit(PAUSE_TEXT, (WIDTH/2 - (PAUSE_TEXT.get_width()/2), HEIGHT - (HEIGHT/4)))
-        display_next_pieces(SCREEN, active_map.next_pieces)
-        pg.display.update()
+        display_pause_menu()
 
 
 def main_menu():
     global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
-    play_button = Button(150, 50, (WIDTH/2 - 75, HEIGHT/2), (255, 255, 255), "Play Game")
-    quit_button = Button(150, 50, (WIDTH/2 - 75, (HEIGHT/2) + 80), (255, 255, 255), "Quit Game")
     menu_font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), 100)
     title = menu_font.render("TETRIS", True, (255, 255, 255))
-
     def display_menu():
         SCREEN.fill((0, 0, 0))
         SCREEN.blit(title, ((SCREEN.get_width()/2)-(title.get_width()/2), SCREEN.get_height()/6))
@@ -356,48 +372,22 @@ def main_menu():
         pg.display.update()
 
 
-    def menu_button_hover(button: Button):
-        global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
-        button.user_hover = True
-        clicked = False
-        released = False
-        while cursor_on_button(button) and game_state == 0:
-            button_click = pg.event.get(pg.MOUSEBUTTONDOWN)
-            button_release = pg.event.get(pg.MOUSEBUTTONUP)
-            if len(button_click) > 0:
-                if button_click[0].button == 1:
-                    clicked = True
-                    button.pressed = True
-            if len(button_release) > 0:
-                if button_release[0].button == 1 and clicked:
-                    button.pressed = False
-                    released = True
-            if clicked and released:
-                button.clicked = True
-                break
-            else:
-                display_menu()
-        button.pressed = False
-        button.user_hover = False
-
-
     while game_state != 2:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 game_state = 2
-        if game_state != 2:
-            if cursor_on_button(play_button):
-                menu_button_hover(play_button)
-                if play_button.clicked:
-                    game_state = 1
-                    play_button.clicked = False
-            elif cursor_on_button(quit_button):
-                menu_button_hover(quit_button)
-                if quit_button.clicked:
-                    game_state = 2
-                    quit_button.clicked = False
-            else:
-                display_menu()
+        if cursor_on_button(play_button):
+            button_hover(play_button, display_menu)
+            if play_button.clicked:
+                game_state = 1
+                play_button.clicked = False
+        elif cursor_on_button(quit_button):
+            button_hover(quit_button, display_menu)
+            if quit_button.clicked:
+                game_state = 2
+                quit_button.clicked = False
+        else:
+            display_menu()
         if game_state == 1:
             new_game()
 
