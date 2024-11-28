@@ -11,6 +11,7 @@ class Button:
         self.pressed = False
         self.color = color
         self.caption = font.render(caption, True, (0, 0, 0))
+        self.clicked = False
         while self.caption.get_width() > width:
             font_size -= int(font_size//10)
             font = pg.font.Font(os.path.join("assets", "gomarice_no_continue.ttf"), font_size)
@@ -39,3 +40,12 @@ class Button:
             pressed_caption_x = (self.pressed_rect.width - self.pressed_caption.get_width())/2 + self.pressed_rect.x
             pressed_caption_y = (self.pressed_rect.height - self.pressed_caption.get_height())/2 + self.pressed_rect.y
             screen.blit(self.pressed_caption, (pressed_caption_x, pressed_caption_y))
+
+
+def cursor_on_button(button: Button) -> bool:
+    mouse_x, mouse_y = pg.mouse.get_pos()
+    buttn_x, buttn_y = button.rect.x, button.rect.y
+    buttn_width, buttn_height = button.rect.width, button.rect.height
+    button_hover_x = buttn_x < mouse_x < buttn_x + buttn_width
+    button_hover_y = buttn_y < mouse_y < buttn_y + buttn_height
+    return (button_hover_x and button_hover_y)
