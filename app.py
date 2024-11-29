@@ -30,8 +30,9 @@ tetrominos = {
     Zpiece : pg.image.load(os.path.join("assets", "Zpiece.png")),
 }
 
-resume_button = Button(150, 50, (WIDTH/2 - 71, HEIGHT - 160), (255, 255, 255), "Resume")
-main_menu_button = Button(150, 50, (WIDTH/2 - 71, HEIGHT - 80), (255, 255, 255), "Main Menu")
+pause_button = Button(25, 25, (WIDTH - 28, 3), (255, 255, 255), "I I")
+resume_button = Button(150, 50, (WIDTH/2 - 75, HEIGHT - 160), (255, 255, 255), "Resume")
+main_menu_button = Button(150, 50, (WIDTH/2 - 75, HEIGHT - 80), (255, 255, 255), "Main Menu")
 play_button = Button(150, 50, (WIDTH/2 - 75, HEIGHT/2), (255, 255, 255), "Play Game")
 quit_button = Button(150, 50, (WIDTH/2 - 75, (HEIGHT/2) + 80), (255, 255, 255), "Quit Game")
 
@@ -131,15 +132,16 @@ class TetrisMap:
                         del self.rows[row][del_index]
                     len_rows -= 2
                     pg.time.set_timer(DEL_COLUMN, 60, 1)
-                elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
-                    pause_game(self, current_score)
-                    pg.event.post(DEL_COLUMN)
+                elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    if cursor_on_button(pause_button):
+                        pause_game(self, current_score)
                 elif event.type == pg.QUIT:
                     game_state = 2
             SCREEN.fill((100, 100, 100))
             self.draw()
-            display_score(SCREEN, current_score + points_earned)
+            display_score(SCREEN, current_score)
             display_next_pieces(SCREEN, self.next_pieces)
+            pause_button.draw(SCREEN)
             pg.display.update()
         for row in completed_rows:
             del self.rows[row]
@@ -166,6 +168,7 @@ class TetrisMap:
             self.draw()
             display_score(SCREEN, current_score + points_earned)
             display_next_pieces(SCREEN, self.next_pieces)
+            pause_button.draw(SCREEN)
             pg.display.update()
 
         return points_earned
@@ -221,10 +224,13 @@ def new_game():
         for event in events:
             if event.type == pg.QUIT:
                 game_state = 2
-            elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
-                pause_game(tetrismap, player_score, piece)
-                if first_collision_happened:
-                    addpiece_delayed = False
+            elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                if cursor_on_button(pause_button):
+                    pg.time.set_timer(PIECE_MOVEDOWN, 0)
+                    pause_game(tetrismap, player_score, piece)
+                    pg.time.set_timer(PIECE_MOVEDOWN, fall_delay)
+                    if first_collision_happened:
+                        addpiece_delayed = False
         
         SCREEN.fill((100, 100, 100))
         if not game_over:
@@ -306,6 +312,7 @@ def new_game():
         tetrismap.draw()
         piece.draw(SCREEN)
         display_score(SCREEN, player_score)
+        pause_button.draw(SCREEN)
         display_next_pieces(SCREEN, tetrismap.next_pieces)
         pg.display.update()
 
@@ -338,6 +345,10 @@ def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
     global game_state # 0 = main_menu; 1 = game_running; 2 = QUIT
     paused = True
     def display_pause_menu():
+        SCREEN.fill((50, 50, 50))
+        active_map.draw()
+        if piece is not None:
+            piece.draw(SCREEN)
         display_score(SCREEN, current_score)
         display_next_pieces(SCREEN, active_map.next_pieces)
         resume_button.draw(SCREEN)
@@ -346,18 +357,22 @@ def pause_game(active_map:TetrisMap, current_score:int, piece:Piece=None):
 
 
     while paused:
-        events = pg.event.get()
-        for event in events:
-            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+        if len(pg.event.get(pg.QUIT)) > 0:
+            game_state = 2
+            paused = False
+        elif cursor_on_button(resume_button):
+            button_hover(resume_button, display_pause_menu)
+            if resume_button.clicked:
                 paused = False
-            elif event.type == pg.QUIT:
-                game_state = 2
+                resume_button.clicked = False
+        elif cursor_on_button(main_menu_button):
+            button_hover(main_menu_button, display_pause_menu)
+            if main_menu_button.clicked:
                 paused = False
-        SCREEN.fill((50, 50, 50))
-        active_map.draw()
-        if piece is not None:
-            piece.draw(SCREEN)
-        display_pause_menu()
+                game_state = 0
+                main_menu_button.clicked = False
+        else:   
+            display_pause_menu()
 
 
 def main_menu():
